@@ -1,7 +1,25 @@
 'use client';
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 
 export default function HomePage() {
+
+  const router = useRouter()
+const supabase = createClient()
+
+const handleGoToPanel = async () => {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user) {
+    router.push('/dashboard')
+  } else {
+    router.push('/login')
+  }
+}
+
 
   return (
     <div className="min-h-screen bg-white">
@@ -20,6 +38,8 @@ export default function HomePage() {
                       <div className="flex items-center gap-4">
               <span className="text-sm text-gray-600"></span>
               <button
+              
+                onClick={handleGoToPanel}
                 className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
               >
                 Ir al Panel
@@ -43,6 +63,7 @@ export default function HomePage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
+            onClick={handleGoToPanel}
               className="px-8 py-4 bg-red-600 text-white rounded-full font-medium hover:bg-red-600 transition-colors shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
               Accede a Nerdos Room

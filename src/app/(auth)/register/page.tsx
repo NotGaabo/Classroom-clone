@@ -1,14 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function SignUpPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const router = useRouter();
+  const supabase = createClient();
 
   const testimonials = [
     {
@@ -19,17 +23,55 @@ export default function SignUpPage() {
     }
   ];
 
-  const handleEmailSignup = async (e: any) => {
+  const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
     try {
-      // Here you would typically create the user account
-      // Then sign them in
-      console.log('Email signup:', email);
-      // router.push('/dashboard');
-    } catch (error) {
+      // 1. Crear usuario en Supabase Auth
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+          emailRedirectTo: `${location.origin}/dashboard`,
+        },
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (data.user) {
+        // Check if email confirmation is required
+        if (data.user.identities && data.user.identities.length === 0) {
+          setError('This email is already registered. Please log in instead.');
+          return;
+        }
+
+        // 2. Crear perfil en la tabla profiles
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            email: email,
+            full_name: fullName,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          // No lanzamos error aquí porque el usuario ya fue creado
+        }
+
+        // Success - redirect to dashboard
+        router.push('/dashboard');
+      }
+    } catch (error: any) {
       console.error('Signup error:', error);
+      setError(error.message || 'An error occurred during sign up');
     } finally {
       setIsLoading(false);
     }
@@ -37,30 +79,60 @@ export default function SignUpPage() {
 
   const handleGoogleSignup = async () => {
     setIsLoading(true);
+    setError('');
+
     try {
-      await signIn('google', { callbackUrl: '/dashboard' });
-    } catch (error) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
       console.error('Google signup error:', error);
+      setError(error.message);
       setIsLoading(false);
     }
   };
 
   const handleFacebookSignup = async () => {
     setIsLoading(true);
+    setError('');
+
     try {
-      await signIn('facebook', { callbackUrl: '/dashboard' });
-    } catch (error) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'facebook',
+        options: {
+          redirectTo: `${location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
       console.error('Facebook signup error:', error);
+      setError(error.message);
       setIsLoading(false);
     }
   };
 
   const handleAppleSignup = async () => {
     setIsLoading(true);
+    setError('');
+
     try {
-      await signIn('apple', { callbackUrl: '/dashboard' });
-    } catch (error) {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo: `${location.origin}/dashboard`,
+        },
+      });
+
+      if (error) throw error;
+    } catch (error: any) {
       console.error('Apple signup error:', error);
+      setError(error.message);
       setIsLoading(false);
     }
   };
@@ -68,12 +140,12 @@ export default function SignUpPage() {
   return (
     <div className="flex min-h-screen">
       {/* Left Side - Sign Up Form */}
-      <div className="flex-1 flex items-center justify-center bg-white px-4 sm:px-6 lg:px-8">
+      <div className="flex-1 flex items-center justify-center bg-white px-4 sm:px-6 lg:px-20">
         <div className="w-full max-w-sm">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-indigo-600 flex items-center justify-center shadow-lg">
-              <div className="w-6 h-6 rounded-full bg-white"></div>
+            <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-md">
+              <div className="w-7 h-7 rounded-lg bg-white"></div>
             </div>
           </div>
 
@@ -82,15 +154,22 @@ export default function SignUpPage() {
             <h1 className="text-3xl font-semibold text-gray-900 mb-2">
               Create an account
             </h1>
-            <p className="text-gray-600">Start your 30-day free trial.</p>
+            <p className="text-gray-500">Start your 30-day free trial.</p>
           </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
           {/* Social Login Buttons */}
           <div className="space-y-3 mb-6">
             <button
               onClick={handleGoogleSignup}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -110,29 +189,29 @@ export default function SignUpPage() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-gray-700 font-medium">Sign up with Google</span>
+              <span className="text-gray-700 font-normal text-sm">Sign up with Google</span>
             </button>
 
             <button
               onClick={handleFacebookSignup}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="#1877F2" viewBox="0 0 24 24">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
-              <span className="text-gray-700 font-medium">Sign up with Facebook</span>
+              <span className="text-gray-700 font-normal text-sm">Sign up with Facebook</span>
             </button>
 
             <button
               onClick={handleAppleSignup}
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" fill="#000000" viewBox="0 0 24 24">
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
               </svg>
-              <span className="text-gray-700 font-medium">Sign up with Apple</span>
+              <span className="text-gray-700 font-normal text-sm">Sign up with Apple</span>
             </button>
           </div>
 
@@ -146,7 +225,7 @@ export default function SignUpPage() {
             </div>
           </div>
 
-          {/* Email Form */}
+          {/* Email Form - Simplified like the reference */}
           <form onSubmit={handleEmailSignup} className="space-y-4">
             <div>
               <input
@@ -154,7 +233,7 @@ export default function SignUpPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all text-sm"
                 required
                 disabled={isLoading}
               />
@@ -163,7 +242,7 @@ export default function SignUpPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-red-600 text-white py-3 rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-purple-600 text-white py-2.5 rounded-lg font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {isLoading ? 'Loading...' : 'Get started'}
             </button>
@@ -172,7 +251,7 @@ export default function SignUpPage() {
           {/* Login Link */}
           <p className="mt-6 text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="/login" className="text-red-600 hover:text-red-700 font-medium">
+            <a href="/login" className="text-purple-600 hover:text-purple-700 font-medium">
               Log in
             </a>
           </p>
@@ -180,32 +259,38 @@ export default function SignUpPage() {
       </div>
 
       {/* Right Side - Testimonial */}
-      <div className="hidden lg:flex flex-1 bg-gray-100 relative">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/testimonial-image.jpg')`
-          }}
-        >
-          <div className="absolute inset-0 flex flex-col justify-end p-12 text-white">
-            <div className="max-w-lg">
-              <blockquote className="text-2xl font-medium mb-6 leading-relaxed">
-                "{testimonials[currentTestimonial].quote}"
-              </blockquote>
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
+        <img 
+          src="https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=2071&auto=format&fit=crop" 
+          alt="Professional testimonial background"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/40"></div>
+        
+        <div className="relative w-full flex flex-col justify-end p-12 text-white">
+          <div className="max-w-xl">
+            {/* Quote */}
+            <blockquote className="text-3xl font-medium mb-8 leading-relaxed">
+              "{testimonials[currentTestimonial].quote}"
+            </blockquote>
 
-              <div className="mb-4">
-                <p className="font-semibold text-lg">
-                  {testimonials[currentTestimonial].author}
-                </p>
-                <p className="text-sm text-gray-200">
-                  {testimonials[currentTestimonial].role}
-                </p>
-                <p className="text-sm text-gray-300">
-                  {testimonials[currentTestimonial].company}
-                </p>
-              </div>
+            {/* Author Info */}
+            <div className="mb-6">
+              <p className="font-semibold text-lg mb-1">
+                {testimonials[currentTestimonial].author}
+              </p>
+              <p className="text-sm text-white/90">
+                {testimonials[currentTestimonial].role}
+              </p>
+              <p className="text-sm text-white/80">
+                {testimonials[currentTestimonial].company}
+              </p>
+            </div>
 
-              <div className="flex items-center gap-1 mb-6">
+            {/* Stars and Navigation */}
+            <div className="flex items-center justify-between">
+              {/* Stars */}
+              <div className="flex items-center gap-1">
                 {[...Array(5)].map((_, i) => (
                   <svg
                     key={i}
@@ -217,11 +302,13 @@ export default function SignUpPage() {
                 ))}
               </div>
 
+              {/* Navigation Buttons */}
               <div className="flex gap-3">
                 <button
                   onClick={() => setCurrentTestimonial(Math.max(0, currentTestimonial - 1))}
-                  className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-full border border-white/30 hover:bg-white/10 flex items-center justify-center transition-colors disabled:opacity-30"
                   disabled={currentTestimonial === 0}
+                  aria-label="Previous testimonial"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -229,8 +316,9 @@ export default function SignUpPage() {
                 </button>
                 <button
                   onClick={() => setCurrentTestimonial(Math.min(testimonials.length - 1, currentTestimonial + 1))}
-                  className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 flex items-center justify-center transition-colors"
+                  className="w-10 h-10 rounded-full border border-white/30 hover:bg-white/10 flex items-center justify-center transition-colors disabled:opacity-30"
                   disabled={currentTestimonial === testimonials.length - 1}
+                  aria-label="Next testimonial"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
