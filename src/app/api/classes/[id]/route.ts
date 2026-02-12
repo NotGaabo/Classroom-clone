@@ -46,21 +46,9 @@ export async function DELETE(
 
     if (deleteError) {
       console.error('Error deleting class:', deleteError)
-      return NextResponse.json(
-        { error: 'Error al eliminar la clase' },
-        { status: 500 }
-      )
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'Clase eliminada exitosamente' 
-    })
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
   }
 }
