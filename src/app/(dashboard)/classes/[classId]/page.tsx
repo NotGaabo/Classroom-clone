@@ -2,13 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
-
-type ClassDetail = {
-  id: string
-  name: string
-  description: string | null
-  created_at: string
-}
+import { ClassDetail } from '@/types/class'
 
 export default function ClassStreamPage() {
   const { classId } = useParams<{ classId: string }>()
