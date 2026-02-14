@@ -34,10 +34,6 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching classes:', error)
-      return NextResponse.json(
-        { error: 'Error al obtener las clases' },
-        { status: 500 }
-      )
     }
 
     return NextResponse.json(classes || [])
