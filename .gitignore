@@ -12,7 +12,7 @@
 # testing
 /coverage
 
-/lib/supabase/*
+src/lib/supabase/*
 
 # next.js
 /.next/

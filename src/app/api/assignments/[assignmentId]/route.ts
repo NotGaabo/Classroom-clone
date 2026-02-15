@@ -5,13 +5,18 @@ import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { assignmentId: string } }
+  context: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
+    const { assignmentId } = await context.params
+
     const supabase = await createClient()
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
     if (authError || !user) {
       return NextResponse.json(
         { error: 'No autenticado' },
@@ -22,10 +27,10 @@ export async function GET(
     const { data: assignment, error } = await supabase
       .from('assignments')
       .select('*')
-      .eq('id', params.assignmentId)
+      .eq('id', assignmentId)
       .single()
 
-    if (error) {
+    if (error || !assignment) {
       console.error('Error fetching assignment:', error)
       return NextResponse.json(
         { error: 'Asignación no encontrada' },

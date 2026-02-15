@@ -5,6 +5,8 @@ export interface Assignment {
   class_id: string
   title: string
   description: string | null
+  points: number | null
+  status: 'not_submitted' | 'submitted' | 'graded'
   due_date: string | null
   created_at: string
 }
