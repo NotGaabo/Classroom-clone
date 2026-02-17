@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-// Tipos para las clases
 interface Class {
   id: string
   name: string
@@ -19,51 +18,49 @@ interface Class {
 }
 
 export default function ClassroomDashboard() {
-  const router = useRouter() // ✅ AGREGADO
+  const router = useRouter()
   const [classes, setClasses] = useState<Class[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showSidebar, setShowSidebar] = useState(false) // ✅ Para mobile
+  const [showSidebar, setShowSidebar] = useState(false)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [fetchingClasses, setFetchingClasses] = useState(true)
 
   const colors = [
-    'from-slate-600 to-slate-700',
-    'from-blue-600 to-blue-700',
-    'from-sky-500 to-sky-600',
-    'from-emerald-600 to-emerald-700',
+    'from-gray-800 to-gray-900',
+    'from-red-600 to-red-700',
     'from-orange-600 to-orange-700',
-    'from-rose-600 to-rose-700',
-    'from-purple-600 to-purple-700',
+    'from-amber-600 to-amber-700',
+    'from-emerald-600 to-emerald-700',
+    'from-teal-600 to-teal-700',
+    'from-cyan-600 to-cyan-700',
+    'from-blue-600 to-blue-700',
     'from-indigo-600 to-indigo-700',
+    'from-purple-600 to-purple-700',
     'from-pink-600 to-pink-700',
-    'from-teal-600 to-teal-700'
+    'from-rose-600 to-rose-700'
   ]
 
-  // Función para obtener un color basado en el ID de la clase
   const getColorForClass = (classId: string) => {
     const index = parseInt(classId.replace(/\D/g, ''), 10) || 0
     return colors[index % colors.length]
   }
 
-  // Función para obtener las iniciales del profesor
   const getTeacherInitials = (classItem: Class) => {
     const teacher = classItem.class_members?.find(m => m.role === 'teacher')
     if (teacher?.profiles?.full_name) {
       const names = teacher.profiles.full_name.split(' ')
       return names.map(n => n[0]).join('').substring(0, 2).toUpperCase()
     }
-    return '👤'
+    return 'PR'
   }
 
-  // Función para obtener el nombre del profesor
   const getTeacherName = (classItem: Class) => {
     const teacher = classItem.class_members?.find(m => m.role === 'teacher')
     return teacher?.profiles?.full_name || teacher?.profiles?.email || 'Profesor'
   }
 
-  // Cargar las clases al montar el componente
   useEffect(() => {
     fetchClasses()
   }, [])
@@ -81,7 +78,6 @@ export default function ClassroomDashboard() {
       setClasses(data)
     } catch (error) {
       console.error('Error fetching classes:', error)
-      alert('No se pudieron cargar las clases. Por favor recarga la página.')
     } finally {
       setFetchingClasses(false)
     }
@@ -147,7 +143,6 @@ export default function ClassroomDashboard() {
       }
 
       setClasses(classes.filter(c => c.id !== classId))
-      alert('Clase eliminada exitosamente')
     } catch (error) {
       console.error('Error:', error)
       alert('Error al eliminar la clase')
@@ -157,74 +152,57 @@ export default function ClassroomDashboard() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('es-ES', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric' 
     })
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="max-w-[1920px] mx-auto px-3 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button 
               onClick={() => setShowSidebar(!showSidebar)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-sm">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <span className="text-lg sm:text-xl font-medium text-gray-800">Classroom</span>
+              <span className="text-xl font-bold text-gray-900 hidden sm:block">Classroom</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowCreateModal(true)}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Crear clase"
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium text-sm transition-colors shadow-sm hover:shadow flex items-center gap-2"
             >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
+              <span className="hidden sm:inline">Crear clase</span>
             </button>
-            <button 
-              onClick={fetchClasses}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              title="Recargar clases"
-              disabled={fetchingClasses}
-            >
-              <svg 
-                className={`w-5 h-5 sm:w-6 sm:h-6 ${fetchingClasses ? 'animate-spin' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-            </button>
-            <button className="hidden sm:block p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-              </svg>
-            </button>
-            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full ml-1 sm:ml-2"></div>
+            
+            <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center ml-2">
+              <span className="text-white text-sm font-bold">TU</span>
+            </div>
           </div>
         </div>
       </header>
 
-      {/* Sidebar */}
-      <div className="flex relative">
-        {/* Overlay para mobile */}
+      <div className="flex">
+        {/* Overlay for mobile */}
         {showSidebar && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -240,12 +218,12 @@ export default function ClassroomDashboard() {
           transition-transform duration-300 ease-in-out
           ${showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}>
-          <nav className="p-2">
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 text-blue-700 font-medium transition-colors">
+          <nav className="p-3 space-y-1">
+            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-50 text-red-600 font-medium transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
               </svg>
-              Inicio
+              Mis clases
             </button>
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -255,14 +233,7 @@ export default function ClassroomDashboard() {
             </button>
             <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Clases
-            </button>
-            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
               </svg>
               Configuración
             </button>
@@ -270,87 +241,95 @@ export default function ClassroomDashboard() {
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 w-full">
-          <div className="max-w-[1400px] mx-auto">
-            {/* Loading state */}
+        <main className="flex-1 p-6 lg:p-8">
+          <div className="max-w-7xl mx-auto">
             {fetchingClasses && classes.length === 0 ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
-                  <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <p className="text-gray-600">Cargando clases...</p>
+                  <div className="relative w-16 h-16 mx-auto mb-6">
+                    <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                    <div className="absolute inset-0 border-4 border-red-600 rounded-full border-t-transparent animate-spin"></div>
+                  </div>
+                  <p className="text-gray-700 font-medium">Cargando clases...</p>
                 </div>
               </div>
             ) : classes.length === 0 ? (
-              // Empty state
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center px-4">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center min-h-[400px]">
+                <div className="text-center max-w-md">
+                  <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                     </svg>
                   </div>
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">No tienes clases aún</h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-4">Crea tu primera clase para comenzar</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">No tienes clases aún</h3>
+                  <p className="text-gray-600 mb-6">Crea tu primera clase para comenzar</p>
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="px-5 sm:px-6 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-sm sm:text-base"
+                    className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow-sm hover:shadow"
                   >
                     Crear mi primera clase
                   </button>
                 </div>
               </div>
             ) : (
-              // Classes grid - Responsive
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {classes.map((classItem) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                {classes.map((classItem, index) => (
                   <div 
-                    onClick={() => goToClass(classItem.id)}
                     key={classItem.id}
-                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer group"
+                    onClick={() => goToClass(classItem.id)}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer group border border-gray-200"
+                    style={{
+                      animation: `fadeIn 0.3s ease-out ${index * 0.05}s backwards`
+                    }}
                   >
-                    {/* Card Header con gradiente */}
-                    <div className={`h-28 sm:h-32 bg-gradient-to-br ${getColorForClass(classItem.id)} p-4 sm:p-5 relative overflow-hidden`}>
-                      {/* Patrón decorativo */}
-                      <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 opacity-10">
-                        <svg viewBox="0 0 100 100" className="w-full h-full">
-                          <circle cx="50" cy="50" r="40" fill="white" />
-                        </svg>
+                    {/* Card Header */}
+                    <div className={`relative h-32 bg-gradient-to-br ${getColorForClass(classItem.id)} p-5 overflow-hidden`}>
+                      {/* Pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0" style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='1' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`,
+                          backgroundSize: '20px 20px'
+                        }}></div>
                       </div>
+
+                      {/* Content */}
                       <div className="relative z-10">
-                        <h3 className="text-white font-semibold text-base sm:text-lg line-clamp-2 mb-1">
+                        <h3 className="text-white font-bold text-lg line-clamp-2 mb-1 group-hover:scale-105 transition-transform">
                           {classItem.name}
                         </h3>
-                        <p className="text-white/90 text-xs sm:text-sm line-clamp-1">
+                        <p className="text-white/80 text-sm line-clamp-1">
                           {classItem.description || 'Sin descripción'}
                         </p>
                       </div>
-                      {/* Avatar del profesor */}
-                      <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 overflow-hidden">
-                        <div className="w-full h-full bg-white/10 flex items-center justify-center text-white font-semibold text-xs sm:text-sm">
+
+                      {/* Teacher avatar */}
+                      <div className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/40 flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">
                           {getTeacherInitials(classItem)}
-                        </div>
+                        </span>
                       </div>
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-3 sm:p-4">
-                      <p className="text-xs sm:text-sm text-gray-600 mb-1">{getTeacherName(classItem)}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-400">Creado el {formatDate(classItem.created_at)}</p>
+                    <div className="p-4 border-t border-gray-100">
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        {getTeacherName(classItem)}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Creado el {formatDate(classItem.created_at)}
+                      </p>
                     </div>
 
                     {/* Card Footer */}
-                    <div className="px-3 sm:px-4 pb-3 sm:pb-4 flex items-center justify-between border-t border-gray-100 pt-2 sm:pt-3">
-                      <button className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                        </svg>
-                      </button>
-                      <button className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-full transition-colors">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    <div className="px-4 pb-4 flex items-center justify-between">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                        }}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                       </button>
                       <button 
@@ -358,27 +337,30 @@ export default function ClassroomDashboard() {
                           e.stopPropagation()
                           deleteClass(classItem.id, classItem.name)
                         }}
-                        className="p-1.5 sm:p-2 hover:bg-red-50 rounded-full transition-colors group/delete"
+                        className="p-2 hover:bg-red-50 rounded-lg transition-colors group/delete"
                       >
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 group-hover/delete:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 text-gray-600 group-hover/delete:text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
+
+                    {/* Bottom accent on hover */}
+                    <div className="h-1 bg-gradient-to-r from-red-600 to-red-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300"></div>
                   </div>
                 ))}
 
-                {/* Card para crear nueva clase */}
+                {/* Create new class card */}
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border-2 border-dashed border-gray-300 hover:border-blue-400 h-[240px] sm:h-[280px] flex flex-col items-center justify-center gap-2 sm:gap-3 group"
+                  className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 border-2 border-dashed border-gray-300 hover:border-red-400 min-h-[240px] flex flex-col items-center justify-center gap-3 group"
                 >
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gray-100 group-hover:bg-blue-50 flex items-center justify-center transition-colors">
-                    <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-16 h-16 rounded-full bg-gray-100 group-hover:bg-red-50 flex items-center justify-center transition-colors">
+                    <svg className="w-8 h-8 text-gray-400 group-hover:text-red-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
-                  <span className="text-sm sm:text-base text-gray-600 group-hover:text-blue-600 font-medium transition-colors">
+                  <span className="text-gray-600 group-hover:text-red-600 font-semibold transition-colors">
                     Crear nueva clase
                   </span>
                 </button>
@@ -388,24 +370,22 @@ export default function ClassroomDashboard() {
         </main>
       </div>
 
-      {/* Modal para crear clase - Responsive */}
+      {/* Create Modal */}
       {showCreateModal && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
           onClick={() => setShowCreateModal(false)}
         >
           <div 
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-scale-in"
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Modal Header */}
-            <div className="p-4 sm:p-6 border-b border-gray-100">
+            <div className="p-6 border-b border-gray-100">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">Crear clase</h2>
+                <h2 className="text-2xl font-bold text-gray-900">Crear clase</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  disabled={loading}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -414,10 +394,9 @@ export default function ClassroomDashboard() {
               </div>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+            <div className="p-6 space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Nombre de la clase *
                 </label>
                 <input
@@ -425,14 +404,14 @@ export default function ClassroomDashboard() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Ej: Matemáticas 2025"
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all"
                   disabled={loading}
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Descripción
                 </label>
                 <textarea
@@ -440,29 +419,28 @@ export default function ClassroomDashboard() {
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ej: Curso de matemáticas avanzadas"
                   rows={3}
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none transition-all resize-none"
                   disabled={loading}
                 />
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="p-4 sm:p-6 bg-gray-50 flex gap-2 sm:gap-3 justify-end">
+            <div className="p-6 bg-gray-50 flex gap-3 justify-end border-t border-gray-100">
               <button
                 onClick={() => setShowCreateModal(false)}
                 disabled={loading}
-                className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors disabled:opacity-50"
+                className="px-5 py-2.5 text-gray-700 hover:bg-gray-200 rounded-lg font-medium transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={createClass}
                 disabled={loading || !name.trim()}
-                className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm hover:shadow"
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -478,32 +456,15 @@ export default function ClassroomDashboard() {
       )}
 
       <style jsx>{`
-        @keyframes fade-in {
+        @keyframes fadeIn {
           from {
             opacity: 0;
+            transform: translateY(-10px);
           }
           to {
             opacity: 1;
+            transform: translateY(0);
           }
-        }
-
-        @keyframes scale-in {
-          from {
-            opacity: 0;
-            transform: scale(0.95);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fade-in 0.2s ease-out;
-        }
-
-        .animate-scale-in {
-          animation: scale-in 0.2s ease-out;
         }
       `}</style>
     </div>
