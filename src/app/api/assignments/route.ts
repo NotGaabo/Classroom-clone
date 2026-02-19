@@ -1,8 +1,20 @@
+// src/app/api/assignments/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
+    // 1. Leer el class_id del query param
+    const classId = request.nextUrl.searchParams.get('class_id')
+
+    if (!classId) {
+      return NextResponse.json(
+        { error: 'class_id es requerido' },
+        { status: 400 }
+      )
+    }
+
     const supabase = await createClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -23,10 +35,12 @@ export async function GET(request: NextRequest) {
         due_date,
         created_at
       `)
+      // 2. Filtrar solo las de esta clase
+      .eq('class_id', classId)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching classes:', error)
+      console.error('Error fetching assignments:', error)
     }
 
     return NextResponse.json(assignments || [])
@@ -41,7 +55,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { class_id,title, description, due_date } = await request.json()
+    const { class_id, title, description, due_date } = await request.json()
 
     if (!title || title.trim().length === 0) {
       return NextResponse.json(
@@ -59,6 +73,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       )
     }
+
     console.log('class_id recibido:', class_id)
     console.log('due_date recibido:', due_date)
 
