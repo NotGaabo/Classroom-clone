@@ -1,52 +1,58 @@
-import Link from 'next/link'
+'use client'
 
-export default async function ClassLayout({
+import { useEffect, useState } from 'react'
+import AppHeader from '@/components/base/header/appHeader'
+import AppSidebar from '@/components/base/aside/Appsidebar'
+
+export default function ClassLayout({
   children,
   params
 }: {
   children: React.ReactNode
   params: Promise<{ classId: string }> | { classId: string }
 }) {
-  // Next a veces te lo tipa raro si tú lo pones Promise.
-  // Aquí lo hacemos compatible con ambos.
-  const p: any = params
-  const classId = typeof p?.then === 'function' ? (await p).classId : p.classId
+  const [showSidebar, setShowSidebar] = useState(false)
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-      <div className="max-w-[1400px] mx-auto px-6 pt-8">
-        <div className="rounded-2xl overflow-hidden shadow-sm bg-white">
-          {/* Portada */}
-          <div className="h-52 bg-gradient-to-br from-slate-700 to-slate-900 p-8 flex flex-col justify-end">
-            <h1 className="text-3xl md:text-4xl text-white font-semibold">
-              Clase
-            </h1>
-            <p className="text-white/70 mt-2">ID: {classId}</p>
-          </div>
-
-          {/* Tabs */}
-          <div className="flex gap-6 px-8 border-b">
-            <Tab href={`/classes/${classId}`}>Tablón</Tab>
-            <Tab href={`/classes/${classId}/assignments`}>Trabajo</Tab>
-            <Tab href={`/classes/${classId}/students`}>Personas</Tab>
-            <Tab href={`/classes/${classId}/grades`}>Calificaciones</Tab>
-          </div>
-
-          <div className="p-8">{children}</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Tab({ href, children }: { href: string; children: React.ReactNode }) {
-  // Simple: sin active styling aquí (si quieres active te lo hago con usePathname en client)
-  return (
-    <Link
-      href={href}
-      className="py-4 text-gray-600 hover:text-blue-600 font-medium"
+    <div
+      className="min-h-screen bg-slate-50"
+      style={{
+        backgroundImage:
+          'radial-gradient(ellipse 80% 50% at 20% -20%, rgba(99,102,241,0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 40% at 80% 100%, rgba(6,182,212,0.05) 0%, transparent 60%)',
+      }}
     >
-      {children}
-    </Link>
+      <AppHeader onMenuToggle={() => setShowSidebar((p) => !p)} />
+
+      <div className="flex">
+        {/* Mobile overlay */}
+        {showSidebar && (
+          <div
+            className="fixed inset-0 bg-black/30 z-40 lg:hidden"
+            onClick={() => setShowSidebar(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <aside
+          className={`
+            fixed top-16 left-0 z-[45] transition-transform duration-300
+            lg:static lg:top-auto lg:translate-x-0
+            ${showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+          `}
+        >
+          <AppSidebar activeItem="tareas" />
+        </aside>
+
+        {/* Page content */}
+        <main className="flex-1 overflow-x-hidden">
+          {children}
+        </main>
+      </div>
+
+      <style>{`
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </div>
   )
 }

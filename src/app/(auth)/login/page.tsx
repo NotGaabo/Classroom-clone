@@ -38,7 +38,6 @@ export default function LoginPage() {
   }
 
   return (
-    // ✅ CLAVE: fixed + inset-0 + flex — mismo patrón que SignUpPage
     <div className="fixed inset-0 flex w-screen min-h-screen">
 
       {/* ── LEFT PANEL ── */}

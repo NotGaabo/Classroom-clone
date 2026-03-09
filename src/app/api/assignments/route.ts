@@ -1,9 +1,20 @@
+// src/app/api/assignments/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateClassCode } from '@/lib/utils'
 
 export async function GET(request: NextRequest) {
   try {
+    // 1. Leer el class_id del query param
+    const classId = request.nextUrl.searchParams.get('class_id')
+
+    if (!classId) {
+      return NextResponse.json(
+        { error: 'class_id es requerido' },
+        { status: 400 }
+      )
+    }
+
     const supabase = await createClient()
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
@@ -15,29 +26,24 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const { data: classes, error } = await supabase
-      .from('classes')
+    const { data: assignments, error } = await supabase
+      .from('assignments')
       .select(`
         id,
-        name,
+        title,
         description,
-        created_at,
-        class_members!inner (
-          role,
-          user_id,
-          profiles (
-            full_name
-          )
-        )
+        due_date,
+        created_at
       `)
-      .eq('class_members.user_id', user.id)
+      // 2. Filtrar solo las de esta clase
+      .eq('class_id', classId)
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching classes:', error)
+      console.error('Error fetching assignments:', error)
     }
 
-    return NextResponse.json(classes || [])
+    return NextResponse.json(assignments || [])
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json(
@@ -49,11 +55,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, description } = await request.json()
+    const { class_id, title, description, due_date } = await request.json()
 
-    if (!name || name.trim().length === 0) {
+    if (!title || title.trim().length === 0) {
       return NextResponse.json(
-        { error: 'El nombre de la clase es requerido' },
+        { error: 'El título de la asignación es requerido' },
         { status: 400 }
       )
     }
@@ -68,46 +74,31 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: newClass, error: classError } = await supabase
-      .from('classes')
+    console.log('class_id recibido:', class_id)
+    console.log('due_date recibido:', due_date)
+
+    const { data: newAssignment, error: AssignmentsError } = await supabase
+      .from('assignments')
       .insert([
         {
-          name: name.trim(),
+          class_id: class_id,
+          title: title.trim(),
           description: description?.trim() || null,
-          code:  generateClassCode()
+          due_date: due_date || null
         }
       ])
       .select()
       .single()
 
-    if (classError) {
-      console.error('Error creating class:', classError)
+    if (AssignmentsError) {
+      console.error('Error creating assignment:', AssignmentsError)
       return NextResponse.json(
-        { error: 'Error al crear la clase' },
+        { error: 'Error al crear la asignación' },
         { status: 500 }
       )
     }
 
-    const { error: memberError } = await supabase
-      .from('class_members')
-      .insert([
-        {
-          class_id: newClass.id,
-          user_id: user.id,
-          role: 'teacher'
-        }
-      ])
-
-    if (memberError) {
-      console.error('Error adding teacher:', memberError)
-      await supabase.from('classes').delete().eq('id', newClass.id)
-      return NextResponse.json(
-        { error: 'Error al configurar la clase' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json(newClass, { status: 201 })
+    return NextResponse.json(newAssignment, { status: 201 })
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json(
