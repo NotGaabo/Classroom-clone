@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { generateClassCode } from '@/lib/utils'
 
 export async function GET() {
   try {
@@ -36,6 +35,10 @@ export async function GET() {
 
     if (error) {
       console.error('Error fetching classes:', error)
+      return NextResponse.json(
+        { error: 'No se pudieron cargar las clases' },
+        { status: 500 }
+      )
     }
 
     return NextResponse.json(classes || [])
@@ -69,41 +72,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: newClass, error: classError } = await supabase
-      .from('classes')
-      .insert([
-        {
-          name: name.trim(),
-          description: description?.trim() || null,
-          code:  generateClassCode()
-        }
-      ])
-      .select()
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
       .single()
 
-    if (classError) {
-      console.error('Error creating class:', classError)
+    if (profileError || !profile) {
+      console.error('Error fetching profile role:', profileError)
       return NextResponse.json(
-        { error: 'Error al crear la clase' },
+        { error: 'No se pudo verificar tu perfil' },
         { status: 500 }
       )
     }
 
-    const { error: memberError } = await supabase
-      .from('class_members')
-      .insert([
-        {
-          class_id: newClass.id,
-          user_id: user.id,
-          role: 'teacher'
-        }
-      ])
-
-    if (memberError) {
-      console.error('Error adding teacher:', memberError)
-      await supabase.from('classes').delete().eq('id', newClass.id)
+    if (profile.role !== 'teacher') {
       return NextResponse.json(
-        { error: 'Error al configurar la clase' },
+        { error: 'Solo los profesores pueden crear clases' },
+        { status: 403 }
+      )
+    }
+
+    const { data: newClass, error: classError } = await supabase.rpc('create_classroom', {
+      input_name: name.trim(),
+      input_description: description?.trim() || null
+    })
+
+    if (classError || !newClass) {
+      console.error('Error creating class via RPC:', classError)
+      return NextResponse.json(
+        { error: 'Error al crear la clase' },
         { status: 500 }
       )
     }

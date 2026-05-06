@@ -12,6 +12,35 @@ interface CommentRow {
   } | null
 }
 
+async function getAssignmentAccess(
+  assignmentId: string,
+  userId: string,
+  supabase: Awaited<ReturnType<typeof createClient>>
+) {
+  const { data: assignment, error: assignmentError } = await supabase
+    .from('assignments')
+    .select('id, class_id')
+    .eq('id', assignmentId)
+    .single()
+
+  if (assignmentError || !assignment) {
+    return { error: 'Asignación no encontrada', status: 404 as const }
+  }
+
+  const { data: membership, error: membershipError } = await supabase
+    .from('class_members')
+    .select('role')
+    .eq('class_id', assignment.class_id)
+    .eq('user_id', userId)
+    .single()
+
+  if (membershipError || !membership) {
+    return { error: 'No tienes acceso a esta asignación', status: 403 as const }
+  }
+
+  return { assignment }
+}
+
 /* ======================
    GET COMMENTS
 ====================== */
@@ -27,6 +56,11 @@ export async function GET(
 
     if (authError || !user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const access = await getAssignmentAccess(assignmentId, user.id, supabase)
+    if ('error' in access) {
+      return NextResponse.json({ error: access.error }, { status: access.status })
     }
 
     const { data: comments, error } = await supabase
@@ -97,6 +131,11 @@ export async function POST(
 
     if (authError || !user) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+    }
+
+    const access = await getAssignmentAccess(assignmentId, user.id, supabase)
+    if ('error' in access) {
+      return NextResponse.json({ error: access.error }, { status: access.status })
     }
 
     const { data: newComment, error } = await supabase

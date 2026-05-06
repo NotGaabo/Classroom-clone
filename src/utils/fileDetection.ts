@@ -10,7 +10,7 @@ export function detectFileType(url: string): FileType {
 
   // Buscar en SUPPORTED_FORMATS
   for (const [type, extensions] of Object.entries(SUPPORTED_FORMATS)) {
-    if (extensions.includes(extension)) {
+    if ((extensions as readonly string[]).includes(extension)) {
       return type as FileType
     }
   }
@@ -52,9 +52,9 @@ export function getFileName(url: string): string {
 export function getMimeType(extension: string): string {
   const ext = extension.toLowerCase()
 
-  for (const [, mimes] of Object.entries(MIME_TYPES)) {
-    if (SUPPORTED_FORMATS[ext as keyof typeof SUPPORTED_FORMATS]) {
-      return MIME_TYPES[ext as keyof typeof MIME_TYPES][0]
+  for (const [type, extensions] of Object.entries(SUPPORTED_FORMATS)) {
+    if ((extensions as readonly string[]).includes(ext)) {
+      return MIME_TYPES[type as keyof typeof MIME_TYPES][0]
     }
   }
 

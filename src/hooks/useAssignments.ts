@@ -1,9 +1,8 @@
 // src/hooks/useAssignments.ts
 
-
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Assignment } from '@/types/assignments'
 
@@ -12,6 +11,25 @@ export function useAssignment(assignmentId: string) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isOnline, setIsOnline] = useState(true)
+
+  const fetchAssignment = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/assignments/${assignmentId}`)
+      if (!res.ok) {
+        console.log('Status:', res.status)
+        const text = await res.text()
+        console.log('Response:', text)
+        throw new Error(`Failed to fetch assignment: ${res.status}`)
+      }
+
+      const data = await res.json()
+      setAssignment(data)
+    } catch {
+      setError('No se pudo cargar la asignación')
+    } finally {
+      setLoading(false)
+    }
+  }, [assignmentId])
 
   useEffect(() => {
     if (!assignmentId) return
@@ -41,26 +59,7 @@ export function useAssignment(assignmentId: string) {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [assignmentId])
+  }, [assignmentId, fetchAssignment])
 
-  const fetchAssignment = async () => {
-    try {
-      const res = await fetch(`/api/assignments/${assignmentId}`)
-      if (!res.ok) {
-        console.log('Status:', res.status)
-        const text = await res.text()
-        console.log('Response:', text)
-        throw new Error(`Failed to fetch assignment: ${res.status}`)
-    }
-
-      const data = await res.json()
-      setAssignment(data)
-    } catch {
-      setError('No se pudo cargar la asignación')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return { assignment, loading, error, isOnline }
+  return { assignment, loading, error, isOnline, refreshAssignment: fetchAssignment }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { AssignmentPage } from '@/types/assignments'
 
@@ -16,15 +16,7 @@ export default function AssignmentsPage() {
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
   
-  // Cargar las clases al montar el componente
-  useEffect(() => {
-      if (class_id) {
-        fetchAssignments()
-      }
-    }, [class_id]
-  )
-
-  const fetchAssignments = async () => {
+  const fetchAssignments = useCallback(async () => {
     setFetching(true)
     try {
       const res = await fetch(`/api/assignments?class_id=${class_id}`)
@@ -41,7 +33,13 @@ export default function AssignmentsPage() {
     } finally {
       setFetching(false)
     }
-  }
+  }, [class_id])
+
+  useEffect(() => {
+    if (class_id) {
+      fetchAssignments()
+    }
+  }, [class_id, fetchAssignments])
 
   const createAssignments = async () => {
     if (!name.trim()) {

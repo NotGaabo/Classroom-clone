@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type Step = 'initial' | 'details';
+type AccountRole = 'teacher' | 'student';
 
 export default function SignUpPage() {
   const [step, setStep] = useState<Step>('initial');
@@ -12,11 +13,16 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [accountRole, setAccountRole] = useState<AccountRole>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const router = useRouter();
   const supabase = createClient();
+
+  const getErrorMessage = (error: unknown, fallback: string) => {
+    return error instanceof Error ? error.message : fallback
+  }
 
   const testimonials = [
     {
@@ -63,7 +69,7 @@ export default function SignUpPage() {
         password,
         options: {
           emailRedirectTo: `${location.origin}/dashboard`,
-          data: { full_name: fullName },
+          data: { full_name: fullName, role: accountRole },
         },
       });
       if (signUpError) throw signUpError;
@@ -74,8 +80,8 @@ export default function SignUpPage() {
         }
         router.push('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.message || 'An error occurred during sign up');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'An error occurred during sign up'));
     } finally {
       setIsLoading(false);
     }
@@ -90,8 +96,8 @@ export default function SignUpPage() {
         options: { redirectTo: `${location.origin}/dashboard` },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Google sign up failed'));
       setIsLoading(false);
     }
   };
@@ -105,8 +111,8 @@ export default function SignUpPage() {
         options: { redirectTo: `${location.origin}/dashboard` },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Facebook sign up failed'));
       setIsLoading(false);
     }
   };
@@ -120,8 +126,8 @@ export default function SignUpPage() {
         options: { redirectTo: `${location.origin}/dashboard` },
       });
       if (error) throw error;
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Apple sign up failed'));
       setIsLoading(false);
     }
   };
@@ -271,6 +277,40 @@ export default function SignUpPage() {
                 {error && <ErrorBox message={error} />}
 
                 <form onSubmit={handleFinalSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label style={labelStyle}>I will use this account as</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      {[
+                        { value: 'student', label: 'Student', description: 'Join classes and submit work' },
+                        { value: 'teacher', label: 'Teacher', description: 'Create classes and publish assignments' },
+                      ].map((option) => {
+                        const isSelected = accountRole === option.value
+
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setAccountRole(option.value as AccountRole)}
+                            disabled={isLoading}
+                            style={{
+                              border: isSelected ? '1px solid #2563eb' : '1px solid #d1d5db',
+                              backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                              borderRadius: '0.75rem',
+                              padding: '0.9rem',
+                              textAlign: 'left',
+                              cursor: isLoading ? 'not-allowed' : 'pointer',
+                              transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
+                              boxShadow: isSelected ? '0 0 0 3px rgba(37,99,235,0.12)' : 'none',
+                            }}
+                          >
+                            <div style={{ color: '#111827', fontWeight: 600, marginBottom: '0.25rem' }}>{option.label}</div>
+                            <div style={{ color: '#6b7280', fontSize: '0.875rem', lineHeight: 1.35 }}>{option.description}</div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
                   {/* Full Name */}
                   <div>
                     <label style={labelStyle}>Full name</label>
@@ -348,7 +388,7 @@ export default function SignUpPage() {
           }}>
             <div style={{ maxWidth: '32rem' }}>
               <blockquote style={{ fontSize: '1.5rem', fontWeight: 500, lineHeight: 1.5, margin: '0 0 1.5rem' }}>
-                "{testimonials[currentTestimonial].quote}"
+                &ldquo;{testimonials[currentTestimonial].quote}&rdquo;
               </blockquote>
               <div style={{ marginBottom: '1rem' }}>
                 <p style={{ fontWeight: 600, fontSize: '1.125rem', margin: '0 0 0.25rem' }}>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -12,7 +13,6 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [rememberMe, setRememberMe] = useState(false)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -140,17 +140,20 @@ export default function LoginPage() {
 
       {/* ── RIGHT PANEL ── */}
       <div className="hidden lg:flex flex-1 relative overflow-hidden">
-        <img
+        <Image
           src="https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=80"
           alt="Background"
+          fill
+          priority
+          sizes="50vw"
           className="absolute inset-0 w-full h-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
         <div className="absolute bottom-0 left-0 right-0 p-10 text-white">
           <blockquote className="text-2xl font-semibold leading-snug mb-5">
-            "Untitled has saved us thousands of hours of work. We're able to spin up
-            projects faster and take on more clients."
+            &ldquo;Untitled has saved us thousands of hours of work. We&apos;re able to spin up
+            projects faster and take on more clients.&rdquo;
           </blockquote>
 
           <div className="flex items-end justify-between">

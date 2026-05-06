@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import UserMenu from '@/components/base/header/UserMenu'
 
 interface AppHeaderProps {
   onMenuToggle?: () => void
@@ -169,21 +170,6 @@ export default function AppHeader({ onMenuToggle, showMenuButton = true }: AppHe
 
         .app-header-dropdown-divider { height: 1px; background: #f1f5f9; margin: 4px 0; }
 
-        .app-header-avatar {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #312e81, #4338ca);
-          border: 2px solid rgba(99,102,241,0.2);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.75rem;
-          font-weight: 700;
-          color: #ffffff;
-          letter-spacing: 0.05em;
-        }
-
         .app-header-menu-btn {
           display: none;
           padding: 8px;
@@ -290,7 +276,7 @@ export default function AppHeader({ onMenuToggle, showMenuButton = true }: AppHe
               )}
             </div>
 
-            <div className="app-header-avatar">TU</div>
+            <UserMenu />
           </div>
         </div>
       </header>

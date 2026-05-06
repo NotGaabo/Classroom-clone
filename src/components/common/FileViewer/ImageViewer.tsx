@@ -3,7 +3,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { FileMetadata } from '@/types/file'
 
 interface ImageViewerProps {
@@ -45,6 +44,8 @@ export default function ImageViewer({ file, onError }: ImageViewerProps) {
         </div>
       )}
       
+      {/* Dynamic external URLs and signed URLs are rendered directly here on purpose. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={file.url}
         alt={file.name}

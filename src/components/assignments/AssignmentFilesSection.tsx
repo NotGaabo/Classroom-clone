@@ -14,7 +14,7 @@ import { FileMetadata, FileType } from '@/types/file'
 interface AssignmentFile extends FileMetadata {
   uploadedBy: string
   uploadedAt: string
-  size?: number
+  size?: number | null
 }
 
 interface AssignmentFilesSectionProps {
@@ -64,7 +64,7 @@ export default function AssignmentFilesSection({
   const selectedFile = files[selectedFileIndex]
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-4 ${className}`} data-assignment-id={assignmentId}>
       {/* Encabezado */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>

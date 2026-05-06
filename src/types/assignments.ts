@@ -18,6 +18,7 @@ export interface AssignmentSubmission {
   feedback?: string | null
   graded_at?: string | null
   graded_by?: string | null
+  files?: SubmissionAttachment[]
 }
 
 export interface AssignmentAttachment {
@@ -32,6 +33,10 @@ export interface AssignmentAttachment {
   uploadedAt: string
 }
 
+export interface SubmissionAttachment extends AssignmentAttachment {
+  submission_id?: string
+}
+
 export interface Assignment {
   id: string
   class_id: string
@@ -44,7 +49,10 @@ export interface Assignment {
   simulator_module?: string | null
   my_role?: AssignmentRole | null
   score?: number | null
+  feedback?: string | null
+  graded_at?: string | null
   submissions?: AssignmentSubmission[]
+  own_submission?: AssignmentSubmission | null
   files?: AssignmentAttachment[]
 }
 

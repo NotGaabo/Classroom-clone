@@ -10,7 +10,6 @@
 import { useState } from 'react'
 import FileViewer from './FileViewer'
 import { FileMetadata, FileType } from '@/types/file'
-import { createFileMetadata } from '@/utils/fileDetection'
 
 /**
  * Ejemplo básico: Visor de archivo simple
@@ -166,7 +165,7 @@ export function AssignmentFileViewerExample() {
  * Ejemplo: Gestor de archivos con manejo de errores
  */
 export function FileManagerExample() {
-  const [files, setFiles] = useState<FileMetadata[]>([
+  const [files] = useState<FileMetadata[]>([
     {
       name: 'Captura-2024.png',
       type: 'image' as FileType,
@@ -181,17 +180,6 @@ export function FileManagerExample() {
 
   const handleFileError = (err: Error) => {
     setError(err.message)
-  }
-
-  const handleAddUrl = (url: string) => {
-    try {
-      const newFile = createFileMetadata(url)
-      setFiles([...files, newFile])
-      setSelectedFile(newFile)
-      setError(null)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al agregar archivo')
-    }
   }
 
   return (

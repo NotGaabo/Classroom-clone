@@ -14,7 +14,7 @@ export interface FileMetadata {
   mimeType: string
   extension: string
   url: string
-  size?: number
+  size?: number | null
 }
 
 export interface FileViewerProps {

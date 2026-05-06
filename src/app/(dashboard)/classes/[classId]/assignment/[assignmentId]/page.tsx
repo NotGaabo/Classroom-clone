@@ -8,12 +8,13 @@ import AssignmentCard from '@/components/assignments/AssignmentCard'
 import AssignmentFilesSection from '@/components/assignments/AssignmentFilesSection'
 import CommentsSection from '@/components/assignments/CommentsSection'
 import Sidebar from '@/components/assignments/Sidebar'
+import SubmissionWorkspace from '@/components/assignments/SubmissionWorkspace'
 
 export default function AssignmentDetailPage() {
   const params = useParams()
   const assignmentId = params.assignmentId as string
 
-  const { assignment, loading, error, isOnline } = useAssignment(assignmentId)
+  const { assignment, loading, error, isOnline, refreshAssignment } = useAssignment(assignmentId)
   const commentsData = useComments(assignmentId)
 
   if (loading) {
@@ -69,6 +70,7 @@ export default function AssignmentDetailPage() {
           <div className="lg:col-span-2 space-y-5">
             <AssignmentCard assignment={assignment} />
             <AssignmentFilesSection assignmentId={assignmentId} files={assignment.files ?? []} />
+            <SubmissionWorkspace assignment={assignment} onRefresh={refreshAssignment} />
             <CommentsSection {...commentsData} />
           </div>
 

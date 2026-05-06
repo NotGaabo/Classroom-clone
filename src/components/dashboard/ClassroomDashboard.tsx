@@ -1,6 +1,7 @@
 'use client'
 
 import { useDashboard } from '@/hooks/useDashboard'
+import UserMenu from '@/components/base/header/UserMenu'
 
 export default function ClassroomDashboard() {
   const { goToClass,
@@ -935,8 +936,7 @@ export default function ClassroomDashboard() {
                 )}
               </div>
 
-              {/* Avatar */}
-              <div className="lms-avatar">TU</div>
+              <UserMenu />
             </div>
           </div>
         </header>

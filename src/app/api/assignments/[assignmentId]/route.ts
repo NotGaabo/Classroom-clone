@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { SubmissionAttachment } from '@/types/assignments'
 
 type AssignmentRole = 'teacher' | 'student'
 type FileType = 'image' | 'pdf' | 'word' | 'text' | 'sql' | 'unknown'
@@ -43,6 +44,18 @@ interface AssignmentFileRow {
     full_name?: string | null
     email?: string | null
   } | null
+}
+
+interface SubmissionFileRow {
+  id: string
+  submission_id: string
+  bucket_id: string | null
+  file_name: string
+  file_path: string
+  mime_type: string | null
+  file_size: number | null
+  extension: string | null
+  created_at: string
 }
 
 function getFileType(extension: string, mimeType: string | null): FileType {
@@ -101,6 +114,53 @@ function normalizeDisplayName(rawValue: string) {
     .join(' ')
 }
 
+function getExtensionFromPath(path: string) {
+  const lastSegment = path.split('/').pop() ?? ''
+  return lastSegment.includes('.') ? lastSegment.split('.').pop()?.toLowerCase() ?? '' : ''
+}
+
+async function buildSignedSubmissionFiles(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  rows: SubmissionFileRow[]
+) {
+  const files = await Promise.all(
+    rows.map(async (file) => {
+      const bucketId = file.bucket_id ?? 'assignment-submissions'
+      const extension = (file.extension ?? '').toLowerCase()
+      const mimeType = file.mime_type ?? 'application/octet-stream'
+
+      const { data: signed, error: signedError } = await supabase
+        .storage
+        .from(bucketId)
+        .createSignedUrl(file.file_path, 60 * 60)
+
+      if (signedError) {
+        console.error('Signed URL error for submission attachment:', signedError)
+      }
+
+      return {
+        id: file.id,
+        submission_id: file.submission_id,
+        name: file.file_name,
+        type: getFileType(extension, mimeType),
+        mimeType,
+        extension,
+        url: signed?.signedUrl ?? '',
+        size: file.file_size ?? undefined,
+        uploadedBy: 'Estudiante',
+        uploadedAt: file.created_at,
+      } satisfies SubmissionAttachment
+    })
+  )
+
+  return files.reduce<Map<string, SubmissionAttachment[]>>((map, file) => {
+    const current = map.get(file.submission_id ?? '') ?? []
+    current.push(file)
+    map.set(file.submission_id ?? '', current)
+    return map
+  }, new Map<string, SubmissionAttachment[]>())
+}
+
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ assignmentId: string }> }
@@ -154,7 +214,7 @@ export async function GET(
 
     const { data: ownSubmission, error: ownSubmissionError } = await supabase
       .from('assignment_submissions')
-      .select('id')
+      .select('id, student_id, student_name, content, simulator_module, screenshot_path, submitted_at')
       .eq('assignment_id', assignmentId)
       .eq('student_id', user.id)
       .maybeSingle()
@@ -164,10 +224,12 @@ export async function GET(
     }
 
     let ownGradeScore: number | null = null
+    let ownGradeFeedback: string | null = null
+    let ownGradeAt: string | null = null
     if (ownSubmission?.id) {
       const { data: ownGrade, error: ownGradeError } = await supabase
         .from('assignment_submissions_grades')
-        .select('score')
+        .select('score, feedback, graded_at')
         .eq('submission_id', ownSubmission.id)
         .maybeSingle()
 
@@ -175,6 +237,8 @@ export async function GET(
         console.error('Error fetching own grade:', ownGradeError)
       } else {
         ownGradeScore = ownGrade?.score ?? null
+        ownGradeFeedback = ownGrade?.feedback ?? null
+        ownGradeAt = ownGrade?.graded_at ?? null
       }
     }
 
@@ -191,6 +255,7 @@ export async function GET(
       feedback?: string | null
       graded_at?: string | null
       graded_by?: string | null
+      files?: SubmissionAttachment[]
     }> = []
 
     if (role === 'teacher') {
@@ -242,6 +307,21 @@ export async function GET(
           }
         }
 
+        const { data: submissionFileRows, error: submissionFilesError } = await supabase
+          .from('assignment_submission_files')
+          .select('id, submission_id, bucket_id, file_name, file_path, mime_type, file_size, extension, created_at')
+          .in('submission_id', submissionIds)
+          .order('created_at', { ascending: true })
+
+        if (submissionFilesError) {
+          console.error('Submission files lookup error:', submissionFilesError)
+        }
+
+        const submissionFilesMap = await buildSignedSubmissionFiles(
+          supabase,
+          (submissionFileRows as SubmissionFileRow[] | null) ?? []
+        )
+
         submissions = await Promise.all(
           submissionRows.map(async (row) => {
             let signedUrl: string | null = null
@@ -269,6 +349,21 @@ export async function GET(
               ? normalizeDisplayName(rawName) || 'Estudiante'
               : rawName
             const grade = gradesMap.get(row.id)
+            const attachedFiles = submissionFilesMap.get(row.id) ?? []
+
+            if (attachedFiles.length === 0 && signedUrl) {
+              attachedFiles.push({
+                id: `${row.id}-legacy-preview`,
+                submission_id: row.id,
+                name: row.screenshot_path?.split('/').pop() ?? 'archivo-entregado',
+                type: getFileType(getExtensionFromPath(row.screenshot_path ?? ''), null),
+                mimeType: 'application/octet-stream',
+                extension: getExtensionFromPath(row.screenshot_path ?? ''),
+                url: signedUrl,
+                uploadedBy: studentName,
+                uploadedAt: row.submitted_at,
+              })
+            }
 
             return {
               ...row,
@@ -278,9 +373,54 @@ export async function GET(
               feedback: grade?.feedback ?? null,
               graded_at: grade?.graded_at ?? null,
               graded_by: grade?.teacher_id ?? null,
+              files: attachedFiles,
             }
           })
         )
+      }
+    }
+
+    let ownSubmissionFiles: SubmissionAttachment[] = []
+    if (ownSubmission?.id) {
+      const { data: ownSubmissionFileRows, error: ownSubmissionFilesError } = await supabase
+        .from('assignment_submission_files')
+        .select('id, submission_id, bucket_id, file_name, file_path, mime_type, file_size, extension, created_at')
+        .eq('submission_id', ownSubmission.id)
+        .order('created_at', { ascending: true })
+
+      if (ownSubmissionFilesError) {
+        console.error('Own submission files lookup error:', ownSubmissionFilesError)
+      } else {
+        const submissionFilesMap = await buildSignedSubmissionFiles(
+          supabase,
+          (ownSubmissionFileRows as SubmissionFileRow[] | null) ?? []
+        )
+        ownSubmissionFiles = submissionFilesMap.get(ownSubmission.id) ?? []
+      }
+
+      if (ownSubmissionFiles.length === 0 && ownSubmission.screenshot_path) {
+        const { data: signed, error: signedError } = await supabase
+          .storage
+          .from('assignment-submissions')
+          .createSignedUrl(ownSubmission.screenshot_path, 60 * 60)
+
+        if (signedError) {
+          console.error('Legacy own submission signed URL error:', signedError)
+        } else if (signed?.signedUrl) {
+          ownSubmissionFiles = [
+            {
+              id: `${ownSubmission.id}-legacy-preview`,
+              submission_id: ownSubmission.id,
+              name: ownSubmission.screenshot_path.split('/').pop() ?? 'archivo-entregado',
+              type: getFileType(getExtensionFromPath(ownSubmission.screenshot_path), null),
+              mimeType: 'application/octet-stream',
+              extension: getExtensionFromPath(ownSubmission.screenshot_path),
+              url: signed.signedUrl,
+              uploadedBy: 'Estudiante',
+              uploadedAt: ownSubmission.submitted_at,
+            },
+          ]
+        }
       }
     }
 
@@ -350,7 +490,18 @@ export async function GET(
       ...assignment,
       my_role: role,
       score: ownGradeScore,
+      feedback: ownGradeFeedback,
+      graded_at: ownGradeAt,
       status,
+      own_submission: ownSubmission
+        ? {
+            ...ownSubmission,
+            score: ownGradeScore,
+            feedback: ownGradeFeedback,
+            graded_at: ownGradeAt,
+            files: ownSubmissionFiles,
+          }
+        : null,
       submissions,
       files,
     })

@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
 export default function NotFound() {
-  const [query, setQuery] = useState("");
-
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-8">
       <div className="max-w-5xl w-full flex flex-col md:flex-row items-center justify-between gap-12">
@@ -22,7 +18,7 @@ export default function NotFound() {
 
           {/* Description */}
           <p className="text-gray-500 text-sm mb-8 leading-relaxed">
-            Sorry, the page you are looking for doesn't exist or has been moved.
+            Sorry, the page you are looking for doesn&apos;t exist or has been moved.
             Try searching our site:
           </p>
 

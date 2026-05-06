@@ -135,6 +135,13 @@ export async function POST(request: NextRequest) {
   try {
     const { class_id, title, description, due_date, points } = await request.json()
 
+    if (!class_id || typeof class_id !== 'string') {
+      return NextResponse.json(
+        { error: 'class_id es requerido' },
+        { status: 400 }
+      )
+    }
+
     if (!title || title.trim().length === 0) {
       return NextResponse.json(
         { error: 'El título de la asignación es requerido' },

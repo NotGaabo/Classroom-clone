@@ -9,7 +9,7 @@
 
 import { useState } from 'react'
 import AssignmentFilesSection from '@/components/assignments/AssignmentFilesSection'
-import { FileMetadata } from '@/types/file'
+import { AssignmentAttachment } from '@/types/assignments'
 
 // Datos de ejemplo - reemplazar con datos reales de tu BD
 const EXAMPLE_ASSIGNMENT_DATA = {
@@ -60,7 +60,7 @@ const EXAMPLE_ASSIGNMENT_DATA = {
       uploadedAt: '2024-12-02T14:00:00Z',
       size: 3500000,
     },
-  ] as FileMetadata[],
+  ] as AssignmentAttachment[],
 }
 
 export default function AssignmentPageExample() {
