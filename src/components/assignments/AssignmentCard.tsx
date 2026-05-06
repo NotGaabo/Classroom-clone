@@ -8,11 +8,16 @@ interface Props {
 }
 
 export default function AssignmentCard({ assignment }: Props) {
+  const statusLabel =
+    assignment.status === 'graded'
+      ? 'Calificado'
+      : assignment.status === 'submitted'
+        ? 'Entregado'
+        : 'Pendiente'
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden group">
-      {/* Header with elegant gradient */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-black p-8 overflow-hidden">
-        {/* Subtle pattern overlay */}
+    <div className="group overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_62%,#0ea5e9_100%)] p-8">
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
@@ -20,28 +25,24 @@ export default function AssignmentCard({ assignment }: Props) {
           }}></div>
         </div>
 
-        {/* Red accent line */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-600 via-red-500 to-red-600"></div>
+        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-sky-300 via-white/80 to-sky-300"></div>
 
         <div className="relative flex items-start gap-5">
-          {/* Icon */}
           <div className="flex-shrink-0">
-            <div className="w-14 h-14 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-900/30 group-hover:scale-105 transition-transform duration-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-lg shadow-blue-900/30 transition-transform duration-300 group-hover:scale-105">
               <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
           </div>
 
-          {/* Content */}
           <div className="flex-grow min-w-0">
             <div className="flex items-start justify-between gap-4 mb-2">
               <h1 className="text-2xl font-bold text-white leading-tight tracking-tight">
                 {assignment.title}
               </h1>
               
-              {/* Points badge */}
-              {assignment.points && (
+              {assignment.points !== null && assignment.points !== undefined && (
                 <div className="flex-shrink-0 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
                   <span className="text-sm font-bold text-white">
                     {assignment.points} pts
@@ -49,12 +50,12 @@ export default function AssignmentCard({ assignment }: Props) {
                 </div>
               )}
             </div>
-            
+
             <div className="flex items-center gap-2 text-gray-300">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
-              <span className="text-sm font-medium">'Profesor'</span>
+              <span className="text-sm font-medium">Profesor</span>
               <span className="text-gray-400">•</span>
               <span className="text-sm">{formatShortDate(assignment.created_at)}</span>
             </div>
@@ -62,11 +63,10 @@ export default function AssignmentCard({ assignment }: Props) {
         </div>
       </div>
 
-      {/* Description Content */}
       <div className="p-8">
         {assignment.description ? (
-          <div className="prose prose-sm max-w-none">
-            <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          <div className="max-w-none">
+            <p className="leading-relaxed whitespace-pre-wrap text-slate-700">
               {assignment.description}
             </p>
           </div>
@@ -89,8 +89,8 @@ export default function AssignmentCard({ assignment }: Props) {
             {/* Additional Info */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
+                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -101,18 +101,39 @@ export default function AssignmentCard({ assignment }: Props) {
               </div>
 
               <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-sky-100">
+                  <svg className="w-4 h-4 text-sky-600" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <div>
                   <p className="text-xs text-gray-600 font-medium">Estado</p>
-                  <p className="text-sm font-bold text-green-700">
-                    {assignment.status === 'submitted' ? 'Entregado' : 'Pendiente'}
+                  <p className={`text-sm font-bold ${
+                    assignment.status === 'graded'
+                      ? 'text-emerald-700'
+                      : assignment.status === 'submitted'
+                        ? 'text-sky-700'
+                        : 'text-amber-700'
+                  }`}>
+                    {statusLabel}
                   </p>
                 </div>
               </div>
+            </div>
+          </>
+        )}
+
+        {assignment.score !== null && assignment.score !== undefined && (
+          <>
+            <div className="my-6 border-t border-gray-200"></div>
+            <div className="rounded-2xl bg-gradient-to-r from-sky-50 to-blue-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
+                Tu calificación
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-slate-900">
+                {assignment.score}
+                {assignment.points !== null && assignment.points !== undefined ? ` / ${assignment.points}` : ''}
+              </p>
             </div>
           </>
         )}

@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const { data: classData, error: classError } = await supabase
       .from('classes')
       .select('id, name')
-      .eq(' code', code.trim().toUpperCase())
+      .eq('code', code.trim().toUpperCase())
       .single()
 
     if (classError || !classData) {

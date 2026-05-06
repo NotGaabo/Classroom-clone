@@ -1,15 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import AppHeader from '@/components/base/header/appHeader'
 import AppSidebar from '@/components/base/aside/Appsidebar'
 
 export default function ClassLayout({
   children,
-  params
 }: {
   children: React.ReactNode
-  params: Promise<{ classId: string }> | { classId: string }
 }) {
   const [showSidebar, setShowSidebar] = useState(false)
 
@@ -40,7 +38,7 @@ export default function ClassLayout({
             ${showSidebar ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           `}
         >
-          <AppSidebar activeItem="tareas" />
+          <AppSidebar />
         </aside>
 
         {/* Page content */}

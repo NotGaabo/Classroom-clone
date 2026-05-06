@@ -1,24 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
 import { useDashboard } from '@/hooks/useDashboard'
-
-interface Class {
-  id: string
-  name: string
-  description: string
-  created_at: string
-  my_role?: string        // 'teacher' | 'student'
-  progress?: number       // 0–100, solo relevante para estudiantes
-  class_members?: Array<{
-    role: string
-    profiles?: {
-      full_name?: string
-      email?: string
-    }
-  }>
-}
 
 export default function ClassroomDashboard() {
   const { goToClass,
@@ -1147,6 +1129,32 @@ export default function ClassroomDashboard() {
                                 </div>
                               </div>
                             </div>
+
+                            {classItem.code && (
+                              <div style={{ marginBottom: 12 }}>
+                                <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
+                                  Código de clase
+                                </div>
+                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', letterSpacing: '0.16em' }}>
+                                    {classItem.code}
+                                  </span>
+                                  <button
+                                    className="lms-card-action"
+                                    style={{ width: 26, height: 26 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      navigator.clipboard.writeText(classItem.code ?? '')
+                                    }}
+                                    title="Copiar código"
+                                  >
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
 
                             {/* Progress bar — solo para estudiantes */}
                             {classItem.my_role === 'student' && (

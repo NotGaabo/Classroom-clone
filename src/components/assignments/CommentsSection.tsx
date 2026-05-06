@@ -22,25 +22,23 @@ export default function CommentsSection({
   commentsEndRef
 }: Props) {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      {/* Header */}
+    <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
       <div className="px-6 py-4 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
           </svg>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-slate-900">
             Comentarios de la clase
           </h2>
           {comments.length > 0 && (
-            <span className="ml-auto text-sm font-medium text-gray-500">
+            <span className="ml-auto text-sm font-medium text-slate-500">
               {comments.length}
             </span>
           )}
         </div>
       </div>
 
-      {/* Comments List */}
       <div className="max-h-[500px] overflow-y-auto">
         {comments.length > 0 ? (
           <div className="divide-y divide-gray-100">
@@ -53,26 +51,24 @@ export default function CommentsSection({
                 }}
               >
                 <div className="flex gap-4">
-                  {/* Avatar */}
                   <div className="flex-shrink-0">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-sm">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-sky-500 shadow-sm">
                       <span className="text-white text-sm font-bold">
                         {comment.user_name?.charAt(0).toUpperCase() || 'U'}
                       </span>
                     </div>
                   </div>
 
-                  {/* Comment Content */}
                   <div className="flex-grow min-w-0">
                     <div className="flex items-baseline gap-2 mb-1.5">
-                      <span className="font-semibold text-gray-900 text-sm">
+                      <span className="font-semibold text-slate-900 text-sm">
                         {comment.user_name || 'Usuario'}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-slate-500">
                         {formatShortDate(comment.created_at)}
                       </span>
                     </div>
-                    <p className="text-gray-700 text-sm leading-relaxed">
+                    <p className="text-slate-700 text-sm leading-relaxed">
                       {comment.content}
                     </p>
                   </div>
@@ -84,27 +80,26 @@ export default function CommentsSection({
           </div>
         ) : (
           <div className="py-16 px-6 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <p className="text-gray-500 text-sm font-medium">
+            <p className="text-slate-500 text-sm font-medium">
               No hay comentarios aún
             </p>
-            <p className="text-gray-400 text-xs mt-1">
+            <p className="text-slate-400 text-xs mt-1">
               ¡Sé el primero en comentar!
             </p>
           </div>
         )}
       </div>
 
-      {/* Input Section */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+      <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
         <div className="flex gap-3">
           <div className="flex-shrink-0 pt-1">
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-300">
+              <svg className="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
@@ -121,7 +116,7 @@ export default function CommentsSection({
                 }
               }}
               placeholder="Añade un comentario de clase..."
-              className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-500 transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={submitting}
             />
 
@@ -129,7 +124,7 @@ export default function CommentsSection({
               <div className="mt-3 flex items-center justify-end gap-2">
                 <button
                   onClick={() => setNewComment('')}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-lg transition-colors"
+                  className="rounded-lg px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
                   disabled={submitting}
                 >
                   Cancelar
@@ -137,7 +132,7 @@ export default function CommentsSection({
                 <button
                   onClick={handleSubmitComment}
                   disabled={submitting}
-                  className="px-5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {submitting ? (
                     <span className="flex items-center gap-2">

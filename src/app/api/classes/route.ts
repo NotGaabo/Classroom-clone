@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateClassCode } from '@/lib/utils'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient()
 
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         id,
         name,
         description,
+        code,
         created_at,
         class_members!inner (
           role,

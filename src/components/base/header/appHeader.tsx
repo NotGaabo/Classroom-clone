@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 interface AppHeaderProps {
   onMenuToggle?: () => void
@@ -9,7 +8,6 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({ onMenuToggle, showMenuButton = true }: AppHeaderProps) {
-  const router = useRouter()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 

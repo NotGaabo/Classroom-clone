@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+interface CommentRow {
+  id: string
+  assignment_id: string
+  user_id: string
+  content: string
+  created_at: string
+  profiles?: {
+    full_name?: string | null
+  } | null
+}
+
 /* ======================
    GET COMMENTS
 ====================== */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ assignmentId: string }> }
 ) {
   try {
@@ -41,7 +52,7 @@ export async function GET(
       )
     }
 
-    const formattedComments = comments?.map((comment: any) => ({
+    const formattedComments = (comments as CommentRow[] | null)?.map((comment) => ({
       id: comment.id,
       assignment_id: comment.assignment_id,
       user_id: comment.user_id,

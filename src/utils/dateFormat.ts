@@ -1,5 +1,13 @@
+export const parseDateString = (dateString: string) => {
+  const normalized = /^\d{4}-\d{2}-\d{2}$/.test(dateString)
+    ? `${dateString}T00:00:00`
+    : dateString
+
+  return new Date(normalized)
+}
+
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = parseDateString(dateString)
   return date.toLocaleDateString('es-ES', {
     day: 'numeric',
     month: 'long',
@@ -10,7 +18,7 @@ export const formatDate = (dateString: string) => {
 }
 
 export const formatShortDate = (dateString: string) => {
-  const date = new Date(dateString)
+  const date = parseDateString(dateString)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)

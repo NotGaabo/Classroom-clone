@@ -1,6 +1,16 @@
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 
+type CookieOptions = Partial<{
+  domain: string
+  expires: Date
+  httpOnly: boolean
+  maxAge: number
+  path: string
+  sameSite: 'lax' | 'strict' | 'none'
+  secure: boolean
+}>
+
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -12,12 +22,12 @@ export async function createClient() {
         get(name: string) {
           return cookieStore.get(name)?.value
         },
-        set(name: string, value: string, options: any) {
+        set(name: string, value: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value, ...options })
           } catch {}
         },
-        remove(name: string, options: any) {
+        remove(name: string, options: CookieOptions) {
           try {
             cookieStore.set({ name, value: '', ...options })
           } catch {}

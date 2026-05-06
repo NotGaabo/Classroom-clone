@@ -8,25 +8,15 @@ interface Assignment {
 }
 
 interface AppSidebarProps {
-  /** Assignments array used to show quick stats. Pass [] if not applicable. */
   assignments?: Assignment[]
-  /** Optional active nav key. Defaults to auto-detect via pathname. */
-  activeItem?: 'dashboard' | 'clases' | 'tareas' | 'calendario' | 'calificaciones' | 'logros' | 'configuracion'
+  activeItem?: 'dashboard' | 'clases' | 'tareas' | 'calendario' | 'calificaciones' | 'students'
 }
 
 const NAV_ITEMS = [
   {
-    key: 'dashboard',
-    label: 'Dashboard',
-    href: '/',
-    icon: (
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-    ),
-  },
-  {
     key: 'clases',
     label: 'Mis Clases',
-    href: '/',
+    href: '/dashboard',
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
     ),
@@ -53,15 +43,17 @@ const PROGRESS_ITEMS = [
   {
     key: 'calificaciones',
     label: 'Calificaciones',
+    href: null,
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
     ),
   },
   {
-    key: 'logros',
-    label: 'Logros',
+    key: 'students',
+    label: 'Personas',
+    href: null,
     icon: (
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
     ),
   },
 ]
@@ -69,12 +61,30 @@ const PROGRESS_ITEMS = [
 export default function AppSidebar({ assignments = [], activeItem }: AppSidebarProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const classMatch = pathname.match(/^\/classes\/([^/]+)/)
+  const classId = classMatch?.[1] ?? null
+
+  const navItems = NAV_ITEMS.map((item) => {
+    if (!classId) return item
+    if (item.key === 'tareas') return { ...item, href: `/classes/${classId}` }
+    if (item.key === 'calendario') return { ...item, href: `/classes/${classId}/calendario` }
+    return item
+  })
+
+  const progressItems = PROGRESS_ITEMS.map((item) => {
+    if (!classId) return item
+    if (item.key === 'calificaciones') return { ...item, href: `/classes/${classId}/grades` }
+    if (item.key === 'students') return { ...item, href: `/classes/${classId}/students` }
+    return item
+  })
 
   const isActive = (key: string) => {
     if (activeItem) return activeItem === key
-    // Auto-detect based on pathname
-    if (key === 'tareas' && pathname.includes('assignment')) return true
-    if (key === 'dashboard' && pathname === '/') return true
+    if (key === 'clases') return pathname === '/dashboard' || pathname === '/classes'
+    if (key === 'tareas') return /^\/classes\/[^/]+(?:\/assignment\/[^/]+)?$/.test(pathname)
+    if (key === 'calendario') return pathname.includes('/calendario')
+    if (key === 'calificaciones') return pathname.includes('/grades')
+    if (key === 'students') return pathname.includes('/students')
     return false
   }
 
@@ -85,8 +95,9 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
 
         .app-sidebar {
           width: 240px;
-          background: #ffffff;
-          border-right: 1px solid #e2e8f0;
+          background: rgba(255,255,255,0.88);
+          backdrop-filter: blur(18px);
+          border-right: 1px solid rgba(148,163,184,0.18);
           min-height: calc(100vh - 64px);
           padding: 20px 12px;
           flex-shrink: 0;
@@ -96,10 +107,10 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
         .app-sidebar-section { margin-bottom: 28px; }
 
         .app-sidebar-label {
-          font-size: 0.6875rem;
+          font-size: 0.65rem;
           font-weight: 600;
           text-transform: uppercase;
-          letter-spacing: 0.1em;
+          letter-spacing: 0.12em;
           color: #94a3b8;
           padding: 0 12px;
           margin-bottom: 8px;
@@ -124,28 +135,29 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
         }
 
         .app-sidebar-nav-item:hover {
-          background: #f1f5f9;
+          background: #f8fafc;
           color: #334155;
         }
 
         .app-sidebar-nav-item.active {
-          background: rgba(99,102,241,0.08);
-          color: #4f46e5;
-          border: 1px solid rgba(99,102,241,0.15);
+          background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(14,165,233,0.08));
+          color: #1d4ed8;
+          border: 1px solid rgba(59,130,246,0.16);
         }
 
         .app-sidebar-stats {
-          padding: 14px;
-          background: rgba(99,102,241,0.04);
-          border: 1px solid rgba(99,102,241,0.12);
-          border-radius: 12px;
+          padding: 14px 14px 12px;
+          background: linear-gradient(180deg, rgba(248,250,252,0.96), rgba(255,255,255,0.92));
+          border: 1px solid rgba(148,163,184,0.16);
+          border-radius: 16px;
           margin-top: 8px;
+          box-shadow: 0 12px 26px rgba(15,23,42,0.04);
         }
 
         .app-sidebar-stats-title {
           font-size: 0.7rem;
           font-weight: 700;
-          color: #6366f1;
+          color: #1d4ed8;
           text-transform: uppercase;
           letter-spacing: 0.08em;
           margin-bottom: 10px;
@@ -176,12 +188,10 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
       `}</style>
 
       <div className="app-sidebar">
-
-        {/* Principal */}
         <div className="app-sidebar-section">
           <div className="app-sidebar-label">Principal</div>
 
-          {NAV_ITEMS.map((item) => (
+          {navItems.map((item) => (
             <button
               key={item.key}
               className={`app-sidebar-nav-item ${isActive(item.key) ? 'active' : ''}`}
@@ -195,14 +205,14 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
           ))}
         </div>
 
-        {/* Progreso */}
         <div className="app-sidebar-section">
           <div className="app-sidebar-label">Progreso</div>
 
-          {PROGRESS_ITEMS.map((item) => (
+          {progressItems.map((item) => (
             <button
               key={item.key}
               className={`app-sidebar-nav-item ${isActive(item.key) ? 'active' : ''}`}
+              onClick={() => item.href && router.push(item.href)}
             >
               <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 {item.icon}
@@ -211,20 +221,6 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
             </button>
           ))}
         </div>
-
-        {/* Sistema */}
-        <div className="app-sidebar-section">
-          <div className="app-sidebar-label">Sistema</div>
-          <button className={`app-sidebar-nav-item ${isActive('configuracion') ? 'active' : ''}`}>
-            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Configuración
-          </button>
-        </div>
-
-        {/* Quick stats */}
         {assignments.length > 0 && (
           <div className="app-sidebar-stats">
             <div className="app-sidebar-stats-title">Esta clase</div>
@@ -235,7 +231,7 @@ export default function AppSidebar({ assignments = [], activeItem }: AppSidebarP
             <div className="app-sidebar-divider" />
             <div className="app-sidebar-stats-row">
               <span className="app-sidebar-stats-label">Entregadas</span>
-              <span className="app-sidebar-stats-value" style={{ color: '#059669' }}>
+              <span className="app-sidebar-stats-value" style={{ color: '#0f766e' }}>
                 {assignments.filter(a => a.status === 'submitted').length}
               </span>
             </div>

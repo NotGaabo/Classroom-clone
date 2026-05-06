@@ -1,14 +1,51 @@
 // types/assignments.ts
 
+import type { FileType } from '@/types/file'
+
+export type AssignmentStatus = 'not_submitted' | 'submitted' | 'graded'
+export type AssignmentRole = 'teacher' | 'student'
+
+export interface AssignmentSubmission {
+  id: string
+  student_id: string
+  student_name: string
+  content?: string | null
+  simulator_module?: string | null
+  screenshot_path?: string | null
+  screenshot_url?: string | null
+  submitted_at: string
+  score?: number | null
+  feedback?: string | null
+  graded_at?: string | null
+  graded_by?: string | null
+}
+
+export interface AssignmentAttachment {
+  id: string
+  name: string
+  type: FileType
+  mimeType: string
+  extension: string
+  url: string
+  size?: number | null
+  uploadedBy: string
+  uploadedAt: string
+}
+
 export interface Assignment {
   id: string
   class_id: string
   title: string
   description: string | null
   points: number | null
-  status: 'not_submitted' | 'submitted' | 'graded'
+  status: AssignmentStatus
   due_date: string | null
   created_at: string
+  simulator_module?: string | null
+  my_role?: AssignmentRole | null
+  score?: number | null
+  submissions?: AssignmentSubmission[]
+  files?: AssignmentAttachment[]
 }
 
 export interface AssignmentPage {
@@ -18,6 +55,7 @@ export interface AssignmentPage {
   description: string
   due_date: string
   created_at: string
+  points?: number | null
 }
 
 export interface Comment {
