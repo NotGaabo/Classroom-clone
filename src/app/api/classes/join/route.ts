@@ -18,20 +18,51 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Código requerido' }, { status: 400 })
     }
 
-    // Find the class by invite code
-    const { data: classData, error: classError } = await supabase
+    const normalizedCode = code.trim().toUpperCase()
+    console.log('🔍 Buscando clase con código:', normalizedCode)
+
+    const { data: classes, error: classesError } = await supabase
       .from('classes')
-      .select('id, name')
-      .eq('code', code.trim().toUpperCase())
+      .select('id, name, code')
+      .ilike('code', `${normalizedCode}%`)
+
+    console.log('📊 Resultados de búsqueda:', classes?.length || 0, 'clases encontradas')
+    classes?.forEach(cls => {
+      console.log('   - Código guardado:', `"${cls.code}"`, '-> normalizado:', `"${cls.code?.replace(/\s+/g, '').toUpperCase()}"`)
+    })
+
+    if (classesError) {
+      console.error('❌ Error finding class by code:', classesError)
+      return NextResponse.json({ error: 'Error al buscar la clase' }, { status: 500 })
+    }
+
+    const classData = classes?.find((cls: { code?: string }) => {
+      const storedCode = cls.code ?? ''
+      const normalizedStored = storedCode.replace(/\s+/g, '').toUpperCase()
+      const matches = normalizedStored === normalizedCode
+      console.log(`   Comparando "${normalizedStored}" === "${normalizedCode}" -> ${matches}`)
+      return matches
+    })
+
+    console.log('🎯 Clase encontrada:', classData ? `ID: ${classData.id}, Nombre: ${classData.name}` : 'NINGUNA')
+
+    if (!classData) {
+      return NextResponse.json({ error: 'Código inválido o clase no encontrada' }, { status: 404 })
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
       .single()
 
-    if (classError || !classData) {
-      return NextResponse.json({ error: 'Código inválido o clase no encontrada' }, { status: 404 })
+    if (profileError || !profile || profile.role !== 'student') {
+      return NextResponse.json({ error: 'Solo los estudiantes pueden unirse a clases' }, { status: 403 })
     }
 
     // Check if user is already a member
     const { data: existingMember } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .select('id')
       .eq('class_id', classData.id)
       .eq('user_id', user.id)
@@ -43,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     // Add user as student
     const { error: joinError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .insert({
         class_id: classData.id,
         user_id: user.id,

@@ -137,7 +137,7 @@ export async function GET(
     }
 
     const { data: membership, error: membershipError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .select('role')
       .eq('class_id', assignment.class_id)
       .eq('user_id', user.id)
@@ -154,7 +154,7 @@ export async function GET(
 
     const { data: ownSubmission, error: ownSubmissionError } = await supabase
       .from('assignment_submissions')
-      .select('id')
+      .select('*')
       .eq('assignment_id', assignmentId)
       .eq('student_id', user.id)
       .maybeSingle()
@@ -164,17 +164,24 @@ export async function GET(
     }
 
     let ownGradeScore: number | null = null
+    let ownGradeFeedback: string | null = null
+    let ownGradeAt: string | null = null
+    let ownGradeBy: string | null = null
+
     if (ownSubmission?.id) {
       const { data: ownGrade, error: ownGradeError } = await supabase
         .from('assignment_submissions_grades')
-        .select('score')
+        .select('score, feedback, graded_at, teacher_id')
         .eq('submission_id', ownSubmission.id)
         .maybeSingle()
 
       if (ownGradeError) {
         console.error('Error fetching own grade:', ownGradeError)
-      } else {
-        ownGradeScore = ownGrade?.score ?? null
+      } else if (ownGrade) {
+        ownGradeScore = ownGrade.score ?? null
+        ownGradeFeedback = ownGrade.feedback ?? null
+        ownGradeAt = ownGrade.graded_at ?? null
+        ownGradeBy = ownGrade.teacher_id ?? null
       }
     }
 
@@ -282,6 +289,33 @@ export async function GET(
           })
         )
       }
+    } else if (role === 'student' && ownSubmission?.id) {
+      let signedUrl: string | null = null
+
+      if (ownSubmission.screenshot_path) {
+        const { data: signed, error: signedError } = await supabase
+          .storage
+          .from('assignment-submissions')
+          .createSignedUrl(ownSubmission.screenshot_path, 60 * 60)
+
+        if (signedError) {
+          console.error('Signed URL error:', signedError)
+        }
+
+        signedUrl = signed?.signedUrl ?? null
+      }
+
+      submissions = [
+        {
+          ...ownSubmission,
+          student_name: ownSubmission.student_name,
+          screenshot_url: signedUrl,
+          score: ownGradeScore,
+          feedback: ownGradeFeedback,
+          graded_at: ownGradeAt,
+          graded_by: ownGradeBy,
+        },
+      ]
     }
 
     const { data: fileRows, error: filesError } = await supabase
@@ -340,11 +374,17 @@ export async function GET(
     )
 
     const status =
-      ownGradeScore !== null
-        ? 'graded'
-        : ownSubmission
-          ? 'submitted'
-          : 'not_submitted'
+      role === 'teacher'
+        ? submissions.some((submission) => submission.score !== null && submission.score !== undefined)
+          ? 'graded'
+          : submissions.length > 0
+            ? 'submitted'
+            : 'not_submitted'
+        : ownGradeScore !== null
+          ? 'graded'
+          : ownSubmission
+            ? 'submitted'
+            : 'not_submitted'
 
     return NextResponse.json({
       ...assignment,
@@ -354,6 +394,227 @@ export async function GET(
       submissions,
       files,
     })
+  } catch (error) {
+    console.error('Server error:', error)
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(
+  request: NextRequest,
+  context: { params: Promise<{ assignmentId: string }> }
+) {
+  try {
+    const { assignmentId } = await context.params
+    const { action, content, simulator_module, screenshot_path, submission_id, score, feedback } = await request.json()
+
+    const supabase = await createClient()
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser()
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'No autenticado' },
+        { status: 401 }
+      )
+    }
+
+    const { data: assignment, error: assignmentError } = await supabase
+      .from('assignments')
+      .select('class_id')
+      .eq('id', assignmentId)
+      .single()
+
+    if (assignmentError || !assignment) {
+      return NextResponse.json(
+        { error: 'Asignación no encontrada' },
+        { status: 404 }
+      )
+    }
+
+    const { data: membership, error: membershipError } = await supabase
+      .from('enrollments')
+      .select('role')
+      .eq('class_id', assignment.class_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (membershipError || !membership) {
+      return NextResponse.json(
+        { error: 'No tienes acceso a esta asignación' },
+        { status: 403 }
+      )
+    }
+
+    const role = membership.role as AssignmentRole
+
+    if (action === 'submit') {
+      if (role !== 'student') {
+        return NextResponse.json(
+          { error: 'Solo los estudiantes pueden enviar entregas' },
+          { status: 403 }
+        )
+      }
+
+      if (!content && !simulator_module && !screenshot_path) {
+        return NextResponse.json(
+          { error: 'Debes enviar contenido o un archivo adjunto' },
+          { status: 400 }
+        )
+      }
+
+      const { data: existingSubmission, error: existingError } = await supabase
+        .from('assignment_submissions')
+        .select('id')
+        .eq('assignment_id', assignmentId)
+        .eq('student_id', user.id)
+        .maybeSingle()
+
+      if (existingError) {
+        console.error('Error checking existing submission:', existingError)
+        return NextResponse.json(
+          { error: 'Error interno al procesar la entrega' },
+          { status: 500 }
+        )
+      }
+
+      if (existingSubmission?.id) {
+        const { data: updatedSubmission, error: updateError } = await supabase
+          .from('assignment_submissions')
+          .update({
+            content: content?.trim() ?? null,
+            simulator_module: simulator_module?.trim() ?? null,
+            screenshot_path: screenshot_path ?? null,
+            submitted_at: new Date().toISOString(),
+          })
+          .eq('id', existingSubmission.id)
+          .select()
+          .single()
+
+        if (updateError || !updatedSubmission) {
+          console.error('Error updating submission:', updateError)
+          return NextResponse.json(
+            { error: 'No se pudo actualizar la entrega' },
+            { status: 500 }
+          )
+        }
+
+        return NextResponse.json(updatedSubmission, { status: 200 })
+      }
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profileError) {
+        console.error('Error fetching student profile:', profileError)
+      }
+
+      const studentName =
+        profile?.full_name?.trim() ||
+        (profile?.email ? normalizeDisplayName(profile.email) : '') ||
+        user.email?.trim() ||
+        'Estudiante'
+
+      const { data: newSubmission, error: createError } = await supabase
+        .from('assignment_submissions')
+        .insert([
+          {
+            assignment_id: assignmentId,
+            student_id: user.id,
+            student_name: studentName,
+            content: content?.trim() ?? null,
+            simulator_module: simulator_module?.trim() ?? null,
+            screenshot_path: screenshot_path ?? null,
+          },
+        ])
+        .select()
+        .single()
+
+      if (createError || !newSubmission) {
+        console.error('Error creating submission:', createError)
+        return NextResponse.json(
+          { error: 'No se pudo guardar la entrega' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json(newSubmission, { status: 201 })
+    }
+
+    if (action === 'grade') {
+      if (role !== 'teacher') {
+        return NextResponse.json(
+          { error: 'Solo los profesores pueden calificar entregas' },
+          { status: 403 }
+        )
+      }
+
+      if (!submission_id) {
+        return NextResponse.json(
+          { error: 'submission_id es requerido para calificar' },
+          { status: 400 }
+        )
+      }
+
+      const parsedScore = typeof score === 'number' ? score : Number(score)
+      if (Number.isNaN(parsedScore) || parsedScore < 0) {
+        return NextResponse.json(
+          { error: 'La calificación debe ser un número válido mayor o igual a 0' },
+          { status: 400 }
+        )
+      }
+
+      const { data: submissionRow, error: submissionError } = await supabase
+        .from('assignment_submissions')
+        .select('id, assignment_id')
+        .eq('id', submission_id)
+        .maybeSingle()
+
+      if (submissionError || !submissionRow || submissionRow.assignment_id !== assignmentId) {
+        return NextResponse.json(
+          { error: 'Entrega no encontrada para esta asignación' },
+          { status: 404 }
+        )
+      }
+
+      const { data: grade, error: gradeError } = await supabase
+        .from('assignment_submissions_grades')
+        .upsert(
+          {
+            submission_id,
+            score: parsedScore,
+            feedback: feedback?.trim() ?? null,
+            teacher_id: user.id,
+            graded_at: new Date().toISOString(),
+          },
+          { onConflict: 'submission_id' }
+        )
+        .select()
+        .single()
+
+      if (gradeError || !grade) {
+        console.error('Error saving grade:', gradeError)
+        return NextResponse.json(
+          { error: 'No se pudo guardar la calificación' },
+          { status: 500 }
+        )
+      }
+
+      return NextResponse.json(grade, { status: 200 })
+    }
+
+    return NextResponse.json(
+      { error: 'Acción no válida' },
+      { status: 400 }
+    )
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json(

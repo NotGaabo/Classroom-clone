@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { ensureProfile } from '@/lib/ensureProfile';
 
 type Step = 'initial' | 'details';
 
@@ -71,6 +72,9 @@ export default function SignUpPage() {
         if (data.user.identities && data.user.identities.length === 0) {
           setError('This email is already registered. Please log in instead.');
           return;
+        }
+        if (data.session) {
+          await ensureProfile(supabase, data.user, fullName);
         }
         router.push('/dashboard');
       }

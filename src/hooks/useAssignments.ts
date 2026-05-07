@@ -62,5 +62,5 @@ export function useAssignment(assignmentId: string) {
     }
   }
 
-  return { assignment, loading, error, isOnline }
+  return { assignment, loading, error, isOnline, refresh: fetchAssignment }
 }

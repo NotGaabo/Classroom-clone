@@ -27,7 +27,7 @@ export function useAssignmentsList() {
       }
 
       const { data, error: roleError } = await supabase
-        .from('class_members')
+        .from('enrollments')
         .select('role')
         .eq('class_id', classId)
         .eq('user_id', user.id)

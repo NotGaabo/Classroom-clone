@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { data: membership, error: membershipError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .select('role')
       .eq('class_id', classId)
       .eq('user_id', user.id)
@@ -77,34 +77,37 @@ export async function GET(request: NextRequest) {
     const submittedSet = new Set<string>()
     const gradesMap = new Map<string, number | null>()
 
+    const submissionsQuery = supabase
+      .from('assignment_submissions')
+      .select('id, assignment_id')
+      .in('assignment_id', assignmentIds)
+
     if (role === 'student') {
-      const { data: submissions, error: submissionsError } = await supabase
-        .from('assignment_submissions')
-        .select('id, assignment_id')
-        .eq('student_id', user.id)
-        .in('assignment_id', assignmentIds)
+      submissionsQuery.eq('student_id', user.id)
+    }
 
-      if (submissionsError) {
-        console.error('Error fetching submissions:', submissionsError)
-      } else if (submissions) {
-        submissions.forEach((submission) => {
-          submittedSet.add(submission.assignment_id)
-        })
+    const { data: submissions, error: submissionsError } = await submissionsQuery
 
-        const submissionIds = submissions.map((submission) => submission.id)
-        if (submissionIds.length > 0) {
-          const { data: grades, error: gradesError } = await supabase
-            .from('assignment_submissions_grades')
-            .select('submission_id, assignment_id, score')
-            .in('submission_id', submissionIds)
+    if (submissionsError) {
+      console.error('Error fetching submissions:', submissionsError)
+    } else if (submissions) {
+      submissions.forEach((submission) => {
+        submittedSet.add(submission.assignment_id)
+      })
 
-          if (gradesError) {
-            console.error('Error fetching grades:', gradesError)
-          } else if (grades) {
-            grades.forEach((grade) => {
-              gradesMap.set(grade.assignment_id, grade.score)
-            })
-          }
+      const submissionIds = submissions.map((submission) => submission.id)
+      if (submissionIds.length > 0) {
+        const { data: grades, error: gradesError } = await supabase
+          .from('assignment_submissions_grades')
+          .select('submission_id, assignment_id, score')
+          .in('submission_id', submissionIds)
+
+        if (gradesError) {
+          console.error('Error fetching grades:', gradesError)
+        } else if (grades) {
+          grades.forEach((grade) => {
+            gradesMap.set(grade.assignment_id, grade.score)
+          })
         }
       }
     }
@@ -117,8 +120,12 @@ export async function GET(request: NextRequest) {
         return {
           ...assignment,
           my_role: role,
-          score,
-          status: score !== null ? 'graded' : isSubmitted ? 'submitted' : 'not_submitted',
+          score: role === 'student' ? score : null,
+          status: gradesMap.has(assignment.id)
+            ? 'graded'
+            : isSubmitted
+              ? 'submitted'
+              : 'not_submitted',
         }
       })
     )
@@ -166,7 +173,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: membership, error: membershipError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .select('role')
       .eq('class_id', class_id)
       .eq('user_id', user.id)

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ensureProfile } from '@/lib/ensureProfile'
 
 export default function LoginPage() {
   const supabase = createClient()
@@ -18,12 +19,23 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       alert(error.message)
       setLoading(false)
       return
+    }
+
+    if (data.user) {
+      try {
+        await ensureProfile(supabase, data.user)
+      } catch (profileError) {
+        console.error('Error ensuring profile:', profileError)
+        alert('No se pudo preparar tu perfil. Revisa las políticas de Supabase.')
+        setLoading(false)
+        return
+      }
     }
 
     router.push('/dashboard')

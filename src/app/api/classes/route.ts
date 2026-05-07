@@ -15,30 +15,42 @@ export async function GET() {
       )
     }
 
-    const { data: classes, error } = await supabase
-      .from('classes')
+    const { data: enrollments, error } = await supabase
+      .from('enrollments')
       .select(`
-        id,
-        name,
-        description,
-        code,
-        created_at,
-        class_members!inner (
-          role,
-          user_id,
-          profiles (
-            full_name
-          )
+        role,
+        profiles (
+          full_name
+        ),
+        classes (
+          id,
+          name,
+          description,
+          code,
+          created_at
         )
       `)
-      .eq('class_members.user_id', user.id)
-      .order('created_at', { ascending: false })
+      .eq('user_id', user.id)
+      .order('enrolled_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching classes:', error)
+      return NextResponse.json(
+        { error: 'Error interno del servidor' },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json(classes || [])
+    const classes = enrollments?.map(enrollment => ({
+      ...enrollment.classes,
+      my_role: enrollment.role,
+      class_members: [{
+        role: enrollment.role,
+        profiles: enrollment.profiles
+      }]
+    })) || []
+
+    return NextResponse.json(classes)
   } catch (error) {
     console.error('Server error:', error)
     return NextResponse.json(
@@ -69,13 +81,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile || profile.role !== 'teacher') {
+      return NextResponse.json(
+        { error: 'Solo los profesores pueden crear clases' },
+        { status: 403 }
+      )
+    }
+
+    // Generate unique class code
+    let code = generateClassCode()
+    let attempts = 0
+    const maxAttempts = 10
+    while (attempts < maxAttempts) {
+      const { data: existing } = await supabase
+        .from('classes')
+        .select('id')
+        .eq('code', code)
+        .maybeSingle()
+      if (!existing) break
+      code = generateClassCode()
+      attempts++
+    }
+    if (attempts >= maxAttempts) {
+      return NextResponse.json(
+        { error: 'No se pudo generar un código único para la clase' },
+        { status: 500 }
+      )
+    }
+
     const { data: newClass, error: classError } = await supabase
       .from('classes')
       .insert([
         {
+          teacher_id: user.id,
           name: name.trim(),
           description: description?.trim() || null,
-          code:  generateClassCode()
+          code: code
         }
       ])
       .select()
@@ -90,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { error: memberError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .insert([
         {
           class_id: newClass.id,

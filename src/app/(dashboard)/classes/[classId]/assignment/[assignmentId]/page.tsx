@@ -13,7 +13,7 @@ export default function AssignmentDetailPage() {
   const params = useParams()
   const assignmentId = params.assignmentId as string
 
-  const { assignment, loading, error, isOnline } = useAssignment(assignmentId)
+  const { assignment, loading, error, isOnline, refresh } = useAssignment(assignmentId)
   const commentsData = useComments(assignmentId)
 
   if (loading) {
@@ -72,7 +72,7 @@ export default function AssignmentDetailPage() {
             <CommentsSection {...commentsData} />
           </div>
 
-          <Sidebar assignment={assignment} />
+          <Sidebar assignment={assignment} onRefresh={refresh} />
         </div>
       </div>
     </div>

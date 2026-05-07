@@ -28,13 +28,13 @@ export default function PDFViewer({ file, onError }: PDFViewerProps) {
           </svg>
           <p className="text-gray-600 text-sm font-medium mb-2">Error al cargar el PDF</p>
           <p className="text-gray-400 text-xs">{error.message}</p>
-          <a 
+          <a
             href={file.url} 
             target="_blank" 
             rel="noopener noreferrer"
             className="text-blue-600 hover:text-blue-700 text-sm mt-4 inline-flex items-center gap-1"
           >
-            Descargar PDF
+            Abrir PDF
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>

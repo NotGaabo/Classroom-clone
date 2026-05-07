@@ -29,26 +29,14 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
           <p className="text-gray-600 text-sm font-medium mb-2">No se pudo cargar el documento</p>
           <p className="text-gray-400 text-xs mb-4">{error.message}</p>
           
-          <div className="space-y-2">
-            <p className="text-gray-500 text-xs">Opciones:</p>
-            <div className="flex gap-2 justify-center">
-              <a 
-                href={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-              >
-                Abrir en Office
-              </a>
-              <a 
-                href={file.url}
-                download={file.name}
-                className="px-3 py-2 bg-gray-300 text-gray-800 text-xs rounded hover:bg-gray-400 transition-colors"
-              >
-                Descargar
-              </a>
-            </div>
-          </div>
+          <a
+            href={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700"
+          >
+            Abrir visor en línea
+          </a>
         </div>
       </div>
     )
@@ -77,30 +65,17 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <a 
-            href={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`}
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Abrir en Office Web"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
-          
-          <a 
-            href={file.url}
-            download={file.name}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Descargar"
-          >
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-          </a>
-        </div>
+        <a
+          href={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Abrir visor en línea"
+        >
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
       </div>
 
       {/* Viewer usando Office Web */}
@@ -111,17 +86,14 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
           title={file.name}
           onLoad={() => setIsLoading(false)}
           onError={() => handleError(new Error('No se pudo cargar el visor de Office'))}
-          sandbox="allow-same-origin allow-scripts allow-downloads allow-popups"
+          sandbox="allow-same-origin allow-scripts allow-popups"
         />
       </div>
 
       {/* Info Footer */}
       <div className="bg-white border-t border-gray-200 px-4 py-2 text-right">
         <p className="text-xs text-gray-500">
-          Visualizador: Microsoft Office Web • 
-          <a href={file.url} download={file.name} className="text-blue-600 hover:underline ml-1">
-            Descargar original
-          </a>
+          Visualizador: Microsoft Office Web
         </p>
       </div>
     </div>

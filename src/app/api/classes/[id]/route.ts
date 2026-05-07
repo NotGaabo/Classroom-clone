@@ -29,7 +29,7 @@ export async function GET(
         description,
         code,
         created_at,
-        class_members (
+        class_members:enrollments (
           role,
           user_id,
           profiles (
@@ -79,7 +79,7 @@ export async function DELETE(
     }
 
     const { data: membership, error: membershipError } = await supabase
-      .from('class_members')
+      .from('enrollments')
       .select('role')
       .eq('class_id', classId)
       .eq('user_id', user.id)
