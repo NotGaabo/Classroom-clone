@@ -1,143 +1,172 @@
 'use client'
 
 import { Assignment } from '@/types/assignments'
-import { formatShortDate } from '@/utils/dateFormat'
+import { formatDate, formatShortDate } from '@/utils/dateFormat'
 
 interface Props {
   assignment: Assignment
 }
 
+function getStatusMeta(status: Assignment['status']) {
+  switch (status) {
+    case 'graded':
+      return {
+        badge: 'Calificado',
+        classes: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+        icon: '✓',
+      }
+    case 'submitted':
+      return {
+        badge: 'Entregado',
+        classes: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200',
+        icon: '✓',
+      }
+    default:
+      return {
+        badge: 'Sin entregar',
+        classes: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+        icon: '!',
+      }
+  }
+}
+
 export default function AssignmentCard({ assignment }: Props) {
-  const statusLabel =
-    assignment.status === 'graded'
-      ? 'Calificado'
-      : assignment.status === 'submitted'
-        ? 'Entregado'
-        : 'Pendiente'
+  const statusMeta = getStatusMeta(assignment.status)
 
   return (
-    <div className="group overflow-hidden rounded-[24px] border border-slate-200 bg-white/95 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
-      <div className="relative overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_62%,#0ea5e9_100%)] p-8">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundSize: '30px 30px'
-          }}></div>
-        </div>
+    <article 
+      className="rounded-2xl border shadow-sm hover:shadow-lg transition-all overflow-hidden"
+      style={{
+        borderColor: 'var(--color-neutral-200)',
+        backgroundColor: 'var(--bg-primary)'
+      }}
+    >
+      {/* Header Section */}
+      <div className="border-b p-6 sm:p-8" style={{ borderColor: 'var(--color-neutral-200)' }}>
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          {/* Title & Metadata */}
+          <div className="min-w-0 flex-1">
+            <div className="flex items-start gap-4">
+              {/* Icon */}
+              <div
+                className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{
+                  backgroundColor: 'var(--bg-secondary)',
+                  color: 'var(--text-secondary)',
+                }}
+              >
+                <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
 
-        <div className="absolute top-0 left-0 h-1 w-full bg-gradient-to-r from-sky-300 via-white/80 to-sky-300"></div>
-
-        <div className="relative flex items-start gap-5">
-          <div className="flex-shrink-0">
-            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-blue-500 shadow-lg shadow-blue-900/30 transition-transform duration-300 group-hover:scale-105">
-              <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-          </div>
-
-          <div className="flex-grow min-w-0">
-            <div className="flex items-start justify-between gap-4 mb-2">
-              <h1 className="text-2xl font-bold text-white leading-tight tracking-tight">
-                {assignment.title}
-              </h1>
-              
-              {assignment.points !== null && assignment.points !== undefined && (
-                <div className="flex-shrink-0 px-3 py-1.5 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full">
-                  <span className="text-sm font-bold text-white">
-                    {assignment.points} pts
+              <div className="min-w-0">
+                <h1 className="text-3xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+                  {assignment.title}
+                </h1>
+                <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                  <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                    Profesor
                   </span>
+                  <span className="hidden text-gray-300 sm:inline">•</span>
+                  <span>Publicada {formatShortDate(assignment.created_at)}</span>
+                  {assignment.points !== null && assignment.points !== undefined && (
+                    <>
+                      <span className="hidden text-gray-300 sm:inline">•</span>
+                      <span>{assignment.points} puntos</span>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 text-gray-300">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="text-sm font-medium">Profesor</span>
-              <span className="text-gray-400">•</span>
-              <span className="text-sm">{formatShortDate(assignment.created_at)}</span>
-            </div>
+          {/* Due Date & Status */}
+          <div className="flex flex-col items-start gap-3 lg:items-end">
+            {assignment.due_date && (
+              <div
+                className="rounded-2xl border px-4 py-3 text-left lg:text-right"
+                style={{
+                  borderColor: 'var(--color-neutral-200)',
+                  backgroundColor: 'var(--bg-secondary)',
+                }}
+              >
+                <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-tertiary)' }}>
+                  Fecha de entrega
+                </p>
+                <p className="mt-1 text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {formatDate(assignment.due_date)}
+                </p>
+              </div>
+            )}
+            <span className={`inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold ${statusMeta.classes}`}>
+              {statusMeta.badge}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="p-8">
-        {assignment.description ? (
-          <div className="max-w-none">
-            <p className="leading-relaxed whitespace-pre-wrap text-slate-700">
-              {assignment.description}
+      {/* Content Section */}
+      <div className="p-6 sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
+          {/* Instructions */}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-tertiary)' }}>
+              Instrucciones
             </p>
-          </div>
-        ) : (
-          <div className="py-8 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-              <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
+            <div className="mt-3 whitespace-pre-wrap text-base leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+              {assignment.description?.trim() || 'El profesor no ha añadido instrucciones adicionales para esta actividad.'}
             </div>
-            <p className="text-gray-500 text-sm font-medium">Sin descripción</p>
           </div>
-        )}
 
-        {/* Divider */}
-        {assignment.due_date && (
-          <>
-            <div className="my-6 border-t border-gray-200"></div>
-
-            {/* Additional Info */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-medium">Vence</p>
-                  <p className="text-sm font-bold text-gray-900">{formatShortDate(assignment.due_date)}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-sky-100">
-                  <svg className="w-4 h-4 text-sky-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-600 font-medium">Estado</p>
-                  <p className={`text-sm font-bold ${
-                    assignment.status === 'graded'
-                      ? 'text-emerald-700'
-                      : assignment.status === 'submitted'
-                        ? 'text-sky-700'
-                        : 'text-amber-700'
-                  }`}>
-                    {statusLabel}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {assignment.score !== null && assignment.score !== undefined && (
-          <>
-            <div className="my-6 border-t border-gray-200"></div>
-            <div className="rounded-2xl bg-gradient-to-r from-sky-50 to-blue-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-700">
-                Tu calificación
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-slate-900">
-                {assignment.score}
-                {assignment.points !== null && assignment.points !== undefined ? ` / ${assignment.points}` : ''}
+          {/* Quick Summary Sidebar */}
+          <div
+            className="space-y-3 rounded-2xl border p-4"
+            style={{
+              borderColor: 'var(--color-neutral-200)',
+              backgroundColor: 'var(--bg-secondary)',
+            }}
+          >
+            <div>
+              <p className="text-xs font-semibold uppercase" style={{ color: 'var(--text-tertiary)' }}>
+                Resumen rápido
               </p>
             </div>
-          </>
-        )}
+
+            <div className="rounded-2xl bg-white px-4 py-3">
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                Estado
+              </p>
+              <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {statusMeta.badge}
+              </p>
+            </div>
+
+            {assignment.score !== null && assignment.score !== undefined && (
+              <div className="rounded-2xl bg-white px-4 py-3">
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Tu calificación
+                </p>
+                <p className="mt-1 text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {assignment.score}
+                  {assignment.points !== null && assignment.points !== undefined ? ` / ${assignment.points}` : ''}
+                </p>
+              </div>
+            )}
+
+            {assignment.due_date && (
+              <div className="rounded-2xl bg-white px-4 py-3">
+                <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                  Entrega
+                </p>
+                <p className="mt-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {formatShortDate(assignment.due_date)}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </article>
   )
 }

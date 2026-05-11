@@ -1,23 +1,46 @@
 import { createClient } from '@/lib/supabase/server'
+import { createSupabaseUnavailableError, isSupabaseNetworkError } from '@/lib/supabase/errors'
 import { ensureProfileForUser, findProfileById } from '@/server/repositories/profiles.repository'
 import { buildCapabilities } from '@/server/permissions/capabilities'
 import type { AuthContext } from '@/types/platform'
 
 export async function getAuthContext(): Promise<AuthContext | null> {
   const supabase = await createClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
+
+  const authResult = await supabase.auth.getUser()
+  const user = authResult.data.user
+  const error = authResult.error
+
+  if (isSupabaseNetworkError(error)) {
+    throw createSupabaseUnavailableError('No se pudo verificar la sesión con Supabase.')
+  }
 
   if (error || !user) {
     return null
   }
 
-  let profile = await findProfileById(supabase, user.id)
+  let profile: Awaited<ReturnType<typeof findProfileById>>
+
+  try {
+    profile = await findProfileById(supabase, user.id)
+  } catch (profileError) {
+    if (isSupabaseNetworkError(profileError)) {
+      throw createSupabaseUnavailableError('No se pudo cargar el perfil desde Supabase.')
+    }
+
+    throw profileError
+  }
 
   if (!profile) {
-    profile = await ensureProfileForUser(supabase, user)
+    try {
+      profile = await ensureProfileForUser(supabase, user)
+    } catch (profileError) {
+      if (isSupabaseNetworkError(profileError)) {
+        throw createSupabaseUnavailableError('No se pudo crear o cargar el perfil desde Supabase.')
+      }
+
+      throw profileError
+    }
   }
 
   if (!profile || !profile.is_active) {

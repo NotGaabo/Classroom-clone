@@ -1,7 +1,15 @@
 import { apiError } from '@/server/api/response'
+import { isSupabaseNetworkError } from '@/lib/supabase/errors'
 
 export function toApiErrorResponse(error: unknown, fallbackMessage = 'Error interno del servidor') {
   if (error instanceof Error) {
+    if (error.name === 'SERVICE_UNAVAILABLE') {
+      return apiError(
+        { code: 'SERVICE_UNAVAILABLE', message: error.message || 'Servicio temporalmente no disponible' },
+        { status: 503 }
+      )
+    }
+
     if (error.name === 'AUTH_REQUIRED') {
       return apiError({ code: 'AUTH_REQUIRED', message: 'No autenticado' }, { status: 401 })
     }
@@ -29,6 +37,16 @@ export function toApiErrorResponse(error: unknown, fallbackMessage = 'Error inte
         details: error.message,
       },
       { status: 500 }
+    )
+  }
+
+  if (isSupabaseNetworkError(error)) {
+    return apiError(
+      {
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'Supabase no está disponible temporalmente. Intenta de nuevo en unos momentos.',
+      },
+      { status: 503 }
     )
   }
 

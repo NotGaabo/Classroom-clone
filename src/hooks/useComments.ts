@@ -5,7 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { getRealtimeManager } from '@/features/realtime/RealtimeManager'
 import { Comment } from '@/types/assignments'
 
-export function useComments(assignmentId: string) {
+interface UseCommentsOptions {
+  enabled?: boolean
+}
+
+export function useComments(assignmentId: string, options: UseCommentsOptions = {}) {
+  const { enabled = true } = options
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -13,31 +18,38 @@ export function useComments(assignmentId: string) {
   const supabaseRef = useRef(createClient())
 
   useEffect(() => {
-    if (!assignmentId) return
+    if (!assignmentId || !enabled) {
+      setComments([])
+      return
+    }
 
     const supabase = supabaseRef.current
+    let isActive = true
 
-    /* ==========================
-       FETCH INICIAL
-    ========================== */
     const fetchComments = async () => {
-      const res = await fetch(
-        `/api/assignments/${assignmentId}/comments`
-      )
+      try {
+        const res = await fetch(`/api/assignments/${assignmentId}/comments`, {
+          cache: 'no-store',
+        })
 
-      if (res.ok) {
-        const payload = (await res.json().catch(() => null)) as
-          | { data?: Comment[] }
-          | null
-        setComments(payload?.data ?? [])
+        if (!res.ok) {
+          return
+        }
+
+        const payload = (await res.json().catch(() => null)) as { data?: Comment[] } | null
+
+        if (isActive) {
+          setComments(payload?.data ?? [])
+        }
+      } catch {
+        if (isActive) {
+          setComments([])
+        }
       }
     }
 
     fetchComments()
 
-    /* ==========================
-       REALTIME - Configuración mejorada
-    ========================== */
     const realtime = getRealtimeManager()
 
     const unsubscribe = realtime.subscribe({ channelName: `assignment-comments-${assignmentId}` }, (channel) =>
@@ -51,22 +63,28 @@ export function useComments(assignmentId: string) {
             filter: `assignment_id=eq.${assignmentId}`
           },
           async (payload) => {
-            const { data: userData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', payload.new.user_id)
-              .single()
+            try {
+              const { data: userData } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', payload.new.user_id)
+                .single()
 
-            const nextComment: Comment = {
-              id: payload.new.id,
-              assignment_id: payload.new.assignment_id,
-              user_id: payload.new.user_id,
-              content: payload.new.content,
-              created_at: payload.new.created_at,
-              user_name: userData?.full_name || 'Usuario'
-            }
+              if (!isActive) {
+                return
+              }
 
-            setComments(prev => (prev.some((comment) => comment.id === nextComment.id) ? prev : [...prev, nextComment]))
+              const nextComment: Comment = {
+                id: payload.new.id,
+                assignment_id: payload.new.assignment_id,
+                user_id: payload.new.user_id,
+                content: payload.new.content,
+                created_at: payload.new.created_at,
+                user_name: userData?.full_name || 'Usuario'
+              }
+
+              setComments(prev => (prev.some((comment) => comment.id === nextComment.id) ? prev : [...prev, nextComment]))
+            } catch {}
           }
         )
         .on(
@@ -90,49 +108,47 @@ export function useComments(assignmentId: string) {
             filter: `assignment_id=eq.${assignmentId}`
           },
           async (payload) => {
-            const { data: userData } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', payload.new.user_id)
-              .single()
+            try {
+              const { data: userData } = await supabase
+                .from('profiles')
+                .select('full_name')
+                .eq('id', payload.new.user_id)
+                .single()
 
-            const updated: Comment = {
-              id: payload.new.id,
-              assignment_id: payload.new.assignment_id,
-              user_id: payload.new.user_id,
-              content: payload.new.content,
-              created_at: payload.new.created_at,
-              user_name: userData?.full_name || 'Usuario'
-            }
+              if (!isActive) {
+                return
+              }
 
-            setComments(prev => prev.map(c => (c.id === updated.id ? updated : c)))
+              const updated: Comment = {
+                id: payload.new.id,
+                assignment_id: payload.new.assignment_id,
+                user_id: payload.new.user_id,
+                content: payload.new.content,
+                created_at: payload.new.created_at,
+                user_name: userData?.full_name || 'Usuario'
+              }
+
+              setComments(prev => prev.map(c => (c.id === updated.id ? updated : c)))
+            } catch {}
           }
         )
     )
 
-    /* ==========================
-       CLEANUP
-    ========================== */
     return () => {
+      isActive = false
       unsubscribe()
     }
 
-  }, [assignmentId])
+  }, [assignmentId, enabled])
 
-  /* ==========================
-     AUTO SCROLL
-  ========================== */
   useEffect(() => {
     if (comments.length > 0) {
       commentsEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [comments])
 
-  /* ==========================
-     SUBMIT
-  ========================== */
   const handleSubmitComment = async () => {
-    if (!newComment.trim()) return
+    if (!assignmentId || !enabled || !newComment.trim()) return
 
     setSubmitting(true)
 

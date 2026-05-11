@@ -15,7 +15,9 @@ export default function AssignmentDetailPage() {
   const assignmentId = params.assignmentId as string
 
   const { assignment, loading, error, isOnline, refreshAssignment } = useAssignment(assignmentId)
-  const commentsData = useComments(assignmentId)
+  const commentsData = useComments(assignmentId, {
+    enabled: !loading && !error && Boolean(assignment),
+  })
 
   if (loading) {
     return (
@@ -55,6 +57,8 @@ export default function AssignmentDetailPage() {
     )
   }
 
+  const isTeacherView = assignment.my_role === 'teacher'
+
   return (
     <div
       className="min-h-screen bg-slate-50"
@@ -66,15 +70,18 @@ export default function AssignmentDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <AssignmentHeader isOnline={isOnline} />
 
-        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-5">
+        <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="space-y-5">
             <AssignmentCard assignment={assignment} />
             <AssignmentFilesSection assignmentId={assignmentId} files={assignment.files ?? []} />
-            <SubmissionWorkspace assignment={assignment} onRefresh={refreshAssignment} />
+            {isTeacherView && <SubmissionWorkspace assignment={assignment} onRefresh={refreshAssignment} />}
             <CommentsSection {...commentsData} />
           </div>
 
-          <Sidebar assignment={assignment} />
+          <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+            {isTeacherView && <Sidebar assignment={assignment} />}
+            {!isTeacherView && <SubmissionWorkspace assignment={assignment} onRefresh={refreshAssignment} />}
+          </div>
         </div>
       </div>
     </div>

@@ -36,11 +36,13 @@ export default function AssignmentFilesSection({
 
   if (!files || files.length === 0) {
     return (
-      <div className={`bg-white rounded-lg border border-gray-200 p-6 ${className}`}>
-        <h3 className="text-lg font-semibold mb-4">{title}</h3>
-        <div className="flex flex-col items-center justify-center py-8 text-center">
+      <div className={`overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)] ${className}`}>
+        <div className="border-b border-slate-200 px-6 py-5">
+          <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+        </div>
+        <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
           <svg
-            className="w-12 h-12 text-gray-400 mb-3"
+            className="mb-3 h-12 w-12 text-gray-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -52,8 +54,8 @@ export default function AssignmentFilesSection({
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p className="text-gray-600 font-medium">Sin archivos adjuntos</p>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="font-medium text-gray-600">Sin archivos adjuntos</p>
+          <p className="mt-1 text-sm text-gray-500">
             El profesor aún no ha compartido archivos para esta asignación
           </p>
         </div>
@@ -64,25 +66,26 @@ export default function AssignmentFilesSection({
   const selectedFile = files[selectedFileIndex]
 
   return (
-    <div className={`space-y-4 ${className}`} data-assignment-id={assignmentId}>
-      {/* Encabezado */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-        <p className="text-sm text-gray-600">
+    <section
+      className={`overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_18px_40px_rgba(15,23,42,0.05)] ${className}`}
+      data-assignment-id={assignmentId}
+    >
+      <div className="border-b border-slate-200 px-6 py-5">
+        <h3 className="text-lg font-semibold text-slate-950">{title}</h3>
+        <p className="mt-1 text-sm text-gray-600">
           {files.length} {files.length === 1 ? 'archivo' : 'archivos'} disponible
           {files.length !== 1 ? 's' : ''}
         </p>
       </div>
 
-      {/* Visor principal */}
-      {expandedFile === null ? (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          {/* Panel de archivos (lateral) */}
-          <div className="lg:col-span-1 space-y-2">
-            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+      <div className="px-6 py-6">
+        {expandedFile === null ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
+          <div className="space-y-2 lg:col-span-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-600">
               Archivos
             </p>
-            <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
+            <div className="max-h-96 space-y-2 overflow-y-auto pr-2">
               {files.map((file, index) => (
                 <button
                   key={file.url}
@@ -90,7 +93,7 @@ export default function AssignmentFilesSection({
                     setSelectedFileIndex(index)
                     setViewerError(null)
                   }}
-                  className={`w-full p-3 rounded-lg border-2 transition-all text-left group ${
+                  className={`group w-full rounded-2xl border p-3 text-left transition-all ${
                     selectedFileIndex === index
                       ? 'border-blue-500 bg-blue-50'
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
@@ -108,10 +111,8 @@ export default function AssignmentFilesSection({
             </div>
           </div>
 
-          {/* Panel de visualización */}
           <div className="lg:col-span-3 space-y-3">
-            {/* Información del archivo */}
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-4">
+            <div className="rounded-2xl border border-gray-200 bg-slate-50 p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-gray-900">
@@ -147,9 +148,8 @@ export default function AssignmentFilesSection({
               </div>
             </div>
 
-            {/* Error message */}
             {viewerError && (
-              <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg flex gap-3">
+              <div className="flex gap-3 rounded-2xl border border-orange-200 bg-orange-50 p-3">
                 <svg
                   className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5"
                   fill="none"
@@ -172,8 +172,7 @@ export default function AssignmentFilesSection({
               </div>
             )}
 
-            {/* Visor de archivo */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+            <div className="overflow-hidden rounded-2xl border border-gray-200 shadow-sm">
               <FileViewer
                 file={selectedFile}
                 height="450px"
@@ -184,7 +183,6 @@ export default function AssignmentFilesSection({
               />
             </div>
 
-            {/* Footer con opciones */}
             <div className="flex items-center justify-between text-xs text-gray-500 px-1">
               <div>
                 Tipo:{' '}
@@ -202,8 +200,7 @@ export default function AssignmentFilesSection({
             </div>
           </div>
         </div>
-      ) : (
-        /* Vista expandida */
+        ) : (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full h-5/6 flex flex-col max-w-6xl shadow-2xl">
             {/* Encabezado de vista expandida */}
@@ -242,8 +239,9 @@ export default function AssignmentFilesSection({
             </div>
           </div>
         </div>
-      )}
-    </div>
+        )}
+      </div>
+    </section>
   )
 }
 

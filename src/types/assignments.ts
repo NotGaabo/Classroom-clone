@@ -64,6 +64,7 @@ export interface AssignmentPage {
   due_date: string
   created_at: string
   points?: number | null
+  status?: AssignmentStatus
 }
 
 export interface Comment {

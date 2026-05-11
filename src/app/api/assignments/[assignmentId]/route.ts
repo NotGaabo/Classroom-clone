@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { normalizeSupabaseError } from '@/lib/supabase/errors'
 import { SubmissionAttachment } from '@/types/assignments'
 import type { FileType } from '@/types/file'
 
@@ -523,9 +524,32 @@ export async function GET(
       files,
     })
   } catch (error) {
-    console.error('Server error:', error)
+    const normalizedError = normalizeSupabaseError(
+      error,
+      'No se pudo cargar la asignación porque Supabase no respondió.'
+    )
+
+    console.error('Server error:', normalizedError)
+
+    if (normalizedError.name === 'SERVICE_UNAVAILABLE') {
+      return NextResponse.json(
+        {
+          error: {
+            code: 'SERVICE_UNAVAILABLE',
+            message: normalizedError.message,
+          },
+        },
+        { status: 503 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Error interno del servidor',
+        },
+      },
       { status: 500 }
     )
   }

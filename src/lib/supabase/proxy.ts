@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isSupabaseNetworkError } from '@/lib/supabase/errors'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -28,7 +29,20 @@ export async function updateSession(request: NextRequest) {
   )
 
   // refreshing the auth token
-  await supabase.auth.getUser()
+  try {
+    const { error } = await supabase.auth.getUser()
+
+    if (isSupabaseNetworkError(error)) {
+      console.error('Supabase session refresh skipped because the service is unavailable.', error)
+    }
+  } catch (error) {
+    if (isSupabaseNetworkError(error)) {
+      console.error('Supabase session refresh failed with a network error.', error)
+      return supabaseResponse
+    }
+
+    throw error
+  }
 
   return supabaseResponse
 }
