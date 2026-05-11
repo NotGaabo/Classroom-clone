@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getRealtimeManager } from '@/features/realtime/RealtimeManager'
 import { Comment } from '@/types/assignments'
 
 export function useRealtimeComments(assignmentId: string) {
@@ -47,76 +48,78 @@ export function useRealtimeComments(assignmentId: string) {
     fetchInitialComments()
 
     // Configurar suscripción Realtime
-    const channel = supabase
-      .channel(`comments:${assignmentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        async (payload) => {
-          // Obtener información del usuario
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', payload.new.user_id)
-            .single()
+    const realtime = getRealtimeManager()
 
-          const newComment: Comment = {
-            ...payload.new,
-            user_name: userData?.full_name || 'Usuario'
-          } as Comment
+    const unsubscribe = realtime.subscribe({ channelName: `comments:${assignmentId}` }, (channel) =>
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          async (payload) => {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', payload.new.user_id)
+              .single()
 
-          setComments(prev => [...prev, newComment])
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        (payload) => {
-          setComments(prev => prev.filter(c => c.id !== payload.old.id))
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        async (payload) => {
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', payload.new.user_id)
-            .single()
+            const newComment: Comment = {
+              ...payload.new,
+              user_name: userData?.full_name || 'Usuario'
+            } as Comment
 
-          const updatedComment: Comment = {
-            ...payload.new,
-            user_name: userData?.full_name || 'Usuario'
-          } as Comment
+            setComments(prev => [...prev, newComment])
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          (payload) => {
+            setComments(prev => prev.filter(c => c.id !== payload.old.id))
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          async (payload) => {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', payload.new.user_id)
+              .single()
 
-          setComments(prev =>
-            prev.map(c => (c.id === updatedComment.id ? updatedComment : c))
-          )
-        }
-      )
-      .subscribe((status) => {
-        setIsConnected(status === 'SUBSCRIBED')
-      })
+            const updatedComment: Comment = {
+              ...payload.new,
+              user_name: userData?.full_name || 'Usuario'
+            } as Comment
+
+            setComments(prev =>
+              prev.map(c => (c.id === updatedComment.id ? updatedComment : c))
+            )
+          }
+        )
+        .subscribe((status) => {
+          setIsConnected(status === 'SUBSCRIBED')
+        })
+    )
 
     // Cleanup
     return () => {
-      channel.unsubscribe()
+      unsubscribe()
     }
   }, [assignmentId])
 

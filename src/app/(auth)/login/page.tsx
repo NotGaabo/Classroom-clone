@@ -13,28 +13,32 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError('')
 
     const { error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
-      alert(error.message)
+      setError(error.message)
       setLoading(false)
       return
     }
 
-    router.push('/dashboard')
+    router.replace('/dashboard')
+    router.refresh()
   }
 
   const handleGoogleLogin = async () => {
+    setError('')
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/dashboard` },
     })
-    if (error) alert(error.message)
+    if (error) setError(error.message)
   }
 
   return (
@@ -57,6 +61,12 @@ export default function LoginPage() {
           <p className="text-sm text-gray-500 text-center mb-8">
             Welcome back! Please enter your details.
           </p>
+
+          {error && (
+            <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="space-y-5">
             {/* Email */}

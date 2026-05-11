@@ -20,13 +20,15 @@ export default function AssignmentsPage() {
     setFetching(true)
     try {
       const res = await fetch(`/api/assignments?class_id=${class_id}`)
+      const payload = (await res.json().catch(() => null)) as
+        | { data?: AssignmentPage[]; error?: { message?: string } }
+        | null
       
       if (!res.ok) {
-        throw new Error('Error al cargar las asignaciones')
+        throw new Error(payload?.error?.message || 'Error al cargar las asignaciones')
       }
 
-      const data = await res.json()
-      setAssignments(data)
+      setAssignments(payload?.data ?? [])
     } catch (error) {
       console.error('Error fetching assignments:', error)
       alert('No se pudieron cargar las asignaciones. Por favor recarga la página.')
@@ -58,10 +60,10 @@ export default function AssignmentsPage() {
         body: JSON.stringify({ class_id: class_id, title: name, description, due_date: dueDate })
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
 
       if (!res.ok) {
-        alert(data.error || 'Error al crear la asignación')
+        alert(data?.error?.message || 'Error al crear la asignación')
         return
       }
 

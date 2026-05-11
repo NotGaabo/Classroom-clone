@@ -3,9 +3,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { SubmissionAttachment } from '@/types/assignments'
+import type { FileType } from '@/types/file'
 
 type AssignmentRole = 'teacher' | 'student'
-type FileType = 'image' | 'pdf' | 'word' | 'text' | 'sql' | 'unknown'
 
 interface SubmissionRow {
   id: string
@@ -83,8 +83,25 @@ function getFileType(extension: string, mimeType: string | null): FileType {
     return 'word'
   }
 
+  if (
+    ['ppt', 'pptx'].includes(normalizedExtension) ||
+    [
+      'application/vnd.ms-powerpoint',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    ].includes(normalizedMime)
+  ) {
+    return 'word'
+  }
+
   if (normalizedExtension === 'sql' || normalizedMime.includes('sql')) {
     return 'sql'
+  }
+
+  if (
+    ['mp4', 'mov', 'webm', 'avi', 'm4v'].includes(normalizedExtension) ||
+    normalizedMime.startsWith('video/')
+  ) {
+    return 'video'
   }
 
   if (

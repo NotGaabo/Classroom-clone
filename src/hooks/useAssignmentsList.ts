@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { getRealtimeManager } from '@/features/realtime/RealtimeManager'
 import { Assignment, AssignmentRole } from '@/types/assignments'
 import { parseDateString } from '@/utils/dateFormat'
 
@@ -53,8 +54,15 @@ export function useAssignmentsList() {
     setError(null)
     try {
       const res = await fetch(`/api/assignments?class_id=${classId}`)
-      if (!res.ok) throw new Error()
-      setAssignments(await res.json())
+      const payload = (await res.json().catch(() => null)) as
+        | { data?: Assignment[]; error?: { message?: string } }
+        | null
+
+      if (!res.ok) {
+        throw new Error(payload?.error?.message || 'No se pudieron cargar las asignaciones')
+      }
+
+      setAssignments(payload?.data ?? [])
     } catch {
       setError('No se pudieron cargar las asignaciones')
     } finally {
@@ -68,9 +76,10 @@ export function useAssignmentsList() {
   })
 
   const setupRealtimeSubscription = useCallback(() => {
-    const channel = createClient()
-      .channel('assignments-list')
-      .on(
+    const realtime = getRealtimeManager()
+
+    return realtime.subscribe({ channelName: `assignments:${classId}` }, (channel) =>
+      channel.on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'assignments', filter: `class_id=eq.${classId}` },
         ({ eventType, new: n, old: o }) => {
@@ -83,10 +92,7 @@ export function useAssignmentsList() {
           if (eventType === 'DELETE') setAssignments((p) => p.filter((a) => a.id !== o.id))
         }
       )
-      .subscribe()
-    return () => {
-      channel.unsubscribe()
-    }
+    )
   }, [classId])
 
   useEffect(() => {

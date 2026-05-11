@@ -3,7 +3,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { getRealtimeManager } from '@/features/realtime/RealtimeManager'
 import { Assignment } from '@/types/assignments'
 
 export function useAssignment(assignmentId: string) {
@@ -36,29 +36,26 @@ export function useAssignment(assignmentId: string) {
 
     fetchAssignment()
 
-    const supabase = createClient()
+    const realtime = getRealtimeManager()
 
-    const channel = supabase
-      .channel('assignment-detail')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'assignments',
-          filter: `id=eq.${assignmentId}`
-        },
-        (payload) => {
-          setAssignment(payload.new as Assignment)
-        }
-      )
-      .subscribe((status) => {
-        setIsOnline(status === 'SUBSCRIBED')
-      })
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    return realtime.subscribe({ channelName: `assignment-detail:${assignmentId}` }, (channel) =>
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'assignments',
+            filter: `id=eq.${assignmentId}`
+          },
+          (payload) => {
+            setAssignment(payload.new as Assignment)
+          }
+        )
+        .subscribe((status) => {
+          setIsOnline(status === 'SUBSCRIBED')
+        })
+    )
   }, [assignmentId, fetchAssignment])
 
   return { assignment, loading, error, isOnline, refreshAssignment: fetchAssignment }

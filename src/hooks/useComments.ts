@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getRealtimeManager } from '@/features/realtime/RealtimeManager'
 import { Comment } from '@/types/assignments'
 
 export function useComments(assignmentId: string) {
@@ -25,8 +26,10 @@ export function useComments(assignmentId: string) {
       )
 
       if (res.ok) {
-        const data = await res.json()
-        setComments(data)
+        const payload = (await res.json().catch(() => null)) as
+          | { data?: Comment[] }
+          | null
+        setComments(payload?.data ?? [])
       }
     }
 
@@ -35,109 +38,83 @@ export function useComments(assignmentId: string) {
     /* ==========================
        REALTIME - Configuración mejorada
     ========================== */
-    const channel = supabase
-      .channel(`assignment-comments-${assignmentId}`, {
-        config: {
-          broadcast: { self: true }, // Importante para ver tus propios cambios
-        },
-      })
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        async (payload) => {
-          console.log('INSERT EVENT:', payload)
+    const realtime = getRealtimeManager()
 
-          // Fetch del perfil del usuario
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', payload.new.user_id)
-            .single()
+    const unsubscribe = realtime.subscribe({ channelName: `assignment-comments-${assignmentId}` }, (channel) =>
+      channel
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          async (payload) => {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', payload.new.user_id)
+              .single()
 
-          const newComment: Comment = {
-            id: payload.new.id,
-            assignment_id: payload.new.assignment_id,
-            user_id: payload.new.user_id,
-            content: payload.new.content,
-            created_at: payload.new.created_at,
-            user_name: userData?.full_name || 'Usuario'
-          }
-
-          setComments(prev => {
-            // Evitar duplicados
-            if (prev.some(c => c.id === newComment.id)) {
-              return prev
+            const nextComment: Comment = {
+              id: payload.new.id,
+              assignment_id: payload.new.assignment_id,
+              user_id: payload.new.user_id,
+              content: payload.new.content,
+              created_at: payload.new.created_at,
+              user_name: userData?.full_name || 'Usuario'
             }
-            return [...prev, newComment]
-          })
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        (payload) => {
-          console.log('DELETE EVENT:', payload)
-          setComments(prev =>
-            prev.filter(c => c.id !== payload.old.id)
-          )
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'assignment_comments',
-          filter: `assignment_id=eq.${assignmentId}`
-        },
-        async (payload) => {
-          console.log('UPDATE EVENT:', payload)
 
-          const { data: userData } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', payload.new.user_id)
-            .single()
-
-          const updated: Comment = {
-            id: payload.new.id,
-            assignment_id: payload.new.assignment_id,
-            user_id: payload.new.user_id,
-            content: payload.new.content,
-            created_at: payload.new.created_at,
-            user_name: userData?.full_name || 'Usuario'
+            setComments(prev => (prev.some((comment) => comment.id === nextComment.id) ? prev : [...prev, nextComment]))
           }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          (payload) => {
+            setComments(prev => prev.filter(c => c.id !== payload.old.id))
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'assignment_comments',
+            filter: `assignment_id=eq.${assignmentId}`
+          },
+          async (payload) => {
+            const { data: userData } = await supabase
+              .from('profiles')
+              .select('full_name')
+              .eq('id', payload.new.user_id)
+              .single()
 
-          setComments(prev =>
-            prev.map(c =>
-              c.id === updated.id ? updated : c
-            )
-          )
-        }
-      )
-      .subscribe((status, err) => {
-        console.log('CHANNEL STATUS:', status)
-        if (err) {
-          console.error('SUBSCRIPTION ERROR:', err)
-        }
-      })
+            const updated: Comment = {
+              id: payload.new.id,
+              assignment_id: payload.new.assignment_id,
+              user_id: payload.new.user_id,
+              content: payload.new.content,
+              created_at: payload.new.created_at,
+              user_name: userData?.full_name || 'Usuario'
+            }
+
+            setComments(prev => prev.map(c => (c.id === updated.id ? updated : c)))
+          }
+        )
+    )
 
     /* ==========================
        CLEANUP
     ========================== */
     return () => {
-      console.log('Removing channel subscription')
-      supabase.removeChannel(channel)
+      unsubscribe()
     }
 
   }, [assignmentId])

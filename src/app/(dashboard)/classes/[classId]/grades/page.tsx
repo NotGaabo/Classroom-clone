@@ -43,11 +43,11 @@ export default function GradesPage() {
         if (!classRes.ok) throw new Error('No se pudo cargar la clase')
         if (!assignmentsRes.ok) throw new Error('No se pudieron cargar las asignaciones')
 
-        const classData = await classRes.json()
-        const assignmentsData = await assignmentsRes.json()
+        const classPayload = await classRes.json()
+        const assignmentsPayload = await assignmentsRes.json()
 
-        setClassInfo(classData)
-        setAssignments(assignmentsData)
+        setClassInfo(classPayload.data)
+        setAssignments(assignmentsPayload.data ?? [])
         setError(null)
       } catch (fetchError) {
         console.error(fetchError)

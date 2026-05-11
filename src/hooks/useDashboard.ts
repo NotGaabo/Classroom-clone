@@ -1,27 +1,19 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-
-interface Class {
-  id: string
-  name: string
-  description: string
-  code?: string
-  created_at: string
-  my_role?: string        // 'teacher' | 'student'
-  progress?: number       // 0–100, solo relevante para estudiantes
-  class_members?: Array<{
-    role: string
-    profiles?: {
-      full_name?: string
-      email?: string
-    }
-  }>
-}
+import { useClassList } from '@/features/classes/hooks/useClassList'
 
 export function useDashboard() {
 
   const router = useRouter()
-  const [classes, setClasses] = useState<Class[]>([])
+  const {
+    classes,
+    deleteClass,
+    fetchClasses,
+    fetchingClasses,
+    formatDate,
+    getTeacherInitials,
+    getTeacherName,
+  } = useClassList()
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [showDropdown, setShowDropdown] = useState(false)
@@ -31,7 +23,6 @@ export function useDashboard() {
   const [joinCode, setJoinCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [joinLoading, setJoinLoading] = useState(false)
-  const [fetchingClasses, setFetchingClasses] = useState(true)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const cardPalettes = [
@@ -50,23 +41,21 @@ export function useDashboard() {
     return cardPalettes[index % cardPalettes.length]
   }
 
-  const getTeacherInitials = (classItem: Class) => {
-    const teacher = classItem.class_members?.find(m => m.role === 'teacher')
-    if (teacher?.profiles?.full_name) {
-      const names = teacher.profiles.full_name.split(' ')
-      return names.map(n => n[0]).join('').substring(0, 2).toUpperCase()
-    }
-    return 'PR'
-  }
+  const averageProgress = useMemo(() => {
+    const studentClasses = classes.filter((classItem) => classItem.my_role === 'student' && classItem.progress != null)
 
-  const getTeacherName = (classItem: Class) => {
-    const teacher = classItem.class_members?.find(m => m.role === 'teacher')
-    return teacher?.profiles?.full_name || teacher?.profiles?.email || 'Profesor'
-  }
+    if (studentClasses.length === 0) {
+      return null
+    }
+
+    return Math.round(
+      studentClasses.reduce((sum, classItem) => sum + (classItem.progress ?? 0), 0) / studentClasses.length
+    )
+  }, [classes])
 
   useEffect(() => {
     fetchClasses()
-  }, [])
+  }, [fetchClasses])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,20 +67,6 @@ export function useDashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const fetchClasses = async () => {
-    setFetchingClasses(true)
-    try {
-      const res = await fetch('/api/classes')
-      if (!res.ok) throw new Error('Error al cargar las clases')
-      const data = await res.json()
-      setClasses(data)
-    } catch (error) {
-      console.error('Error fetching classes:', error)
-    } finally {
-      setFetchingClasses(false)
-    }
-  }
-
   const createClass = async () => {
     if (!name.trim()) return
     setLoading(true)
@@ -101,8 +76,8 @@ export function useDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, description })
       })
-      const data = await res.json()
-      if (!res.ok) { alert(data.error || 'Error al crear la clase'); return }
+      const payload = await res.json()
+      if (!res.ok) { alert(payload.error?.message || 'Error al crear la clase'); return }
       await fetchClasses()
       setName(''); setDescription(''); setShowCreateModal(false)
     } catch { alert('Error al crear la clase') }
@@ -118,8 +93,8 @@ export function useDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: joinCode.trim().toUpperCase() })
       })
-      const data = await res.json()
-      if (!res.ok) { alert(data.error || 'Código inválido'); return }
+      const payload = await res.json()
+      if (!res.ok) { alert(payload.error?.message || 'Código inválido'); return }
       await fetchClasses()
       setJoinCode(''); setShowJoinModal(false)
     } catch { alert('Error al unirse a la clase') }
@@ -127,19 +102,6 @@ export function useDashboard() {
   }
 
   const goToClass = (classId: string) => router.push(`/classes/${classId}`)
-
-  const deleteClass = async (classId: string, className: string) => {
-    if (!window.confirm(`¿Eliminar la clase "${className}"? Esta acción no se puede deshacer.`)) return
-    try {
-      const res = await fetch(`/api/classes/${classId}`, { method: 'DELETE' })
-      if (!res.ok) { const d = await res.json(); alert(d.error || 'Error'); return }
-      setClasses(classes.filter(c => c.id !== classId))
-    } catch { alert('Error al eliminar la clase') }
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
-  }
 
   return {
     goToClass,
@@ -168,7 +130,8 @@ export function useDashboard() {
     loading,
     joinLoading,
     fetchingClasses,
-    formatDate
+    formatDate,
+    averageProgress,
   }
 
 }

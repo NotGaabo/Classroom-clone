@@ -2,6 +2,11 @@
 
 import { useDashboard } from '@/hooks/useDashboard'
 import UserMenu from '@/components/base/header/UserMenu'
+import { CreateClassModal } from '@/features/classes/components/CreateClassModal'
+import { DashboardClassGrid } from '@/features/classes/components/DashboardClassGrid'
+import { DashboardEmptyState } from '@/features/classes/components/DashboardEmptyState'
+import { DashboardSidebar } from '@/features/classes/components/DashboardSidebar'
+import { JoinClassModal } from '@/features/classes/components/JoinClassModal'
 
 export default function ClassroomDashboard() {
   const { goToClass,
@@ -30,7 +35,8 @@ export default function ClassroomDashboard() {
     loading,
     joinLoading,
     fetchingClasses,
-    formatDate} = useDashboard()
+    formatDate,
+    averageProgress} = useDashboard()
 
   return (
     <>
@@ -952,83 +958,7 @@ export default function ClassroomDashboard() {
             className="lms-sidebar-mobile"
             style={{ transform: showSidebar ? 'translateX(0)' : 'translateX(-100%)' }}
           >
-            <div className="lms-sidebar">
-              <div className="lms-sidebar-section">
-                <div className="lms-sidebar-label">Principal</div>
-                <button className="lms-nav-item active">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                  </svg>
-                  Dashboard
-                </button>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  Mis Clases
-                </button>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                  Tareas
-                </button>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Calendario
-                </button>
-              </div>
-
-              <div className="lms-sidebar-section">
-                <div className="lms-sidebar-label">Progreso</div>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                  Calificaciones
-                </button>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                  </svg>
-                  Logros
-                </button>
-              </div>
-
-              <div className="lms-sidebar-section">
-                <div className="lms-sidebar-label">Sistema</div>
-                <button className="lms-nav-item">
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Configuración
-                </button>
-              </div>
-
-              {/* Progress widget */}
-              {(() => {
-                const studentClasses = classes.filter(c => c.my_role === 'student' && c.progress != null)
-                const avg = studentClasses.length > 0
-                  ? Math.round(studentClasses.reduce((sum, c) => sum + (c.progress ?? 0), 0) / studentClasses.length)
-                  : null
-                if (avg === null) return null
-                return (
-                  <div style={{ padding: '14px', background: 'rgba(99,102,241,0.04)', border: '1px solid rgba(99,102,241,0.12)', borderRadius: 12, marginTop: 8 }}>
-                    <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Tu progreso</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Completado</span>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#6366f1' }}>{avg}%</span>
-                    </div>
-                    <div style={{ height: 4, background: '#e2e8f0', borderRadius: 99, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${avg}%`, background: 'linear-gradient(90deg, #6366f1, #06b6d4)', borderRadius: 99, transition: 'width 0.6s ease' }}></div>
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
+            <DashboardSidebar averageProgress={averageProgress} />
           </aside>
 
           {/* ── Main ── */}
@@ -1044,189 +974,21 @@ export default function ClassroomDashboard() {
                   </div>
                 </div>
               ) : classes.length === 0 ? (
-                <div className="lms-empty">
-                  <div>
-                    <div className="lms-empty-icon">
-                      <svg width="32" height="32" fill="none" stroke="#6366f1" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                      </svg>
-                    </div>
-                    <div className="lms-empty-title">No tienes clases aún</div>
-                    <div className="lms-empty-sub">Crea tu primera clase o únete con un código</div>
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-                      <button className="lms-btn-ghost" onClick={() => setShowJoinModal(true)}>Unirse a clase</button>
-                      <button className="lms-btn-submit amber" onClick={() => setShowCreateModal(true)}>
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Crear clase
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <DashboardEmptyState
+                  onCreate={() => setShowCreateModal(true)}
+                  onJoin={() => setShowJoinModal(true)}
+                />
               ) : (
-                <>
-                  <div className="lms-section-header">
-                    <div>
-                      <div className="lms-section-title">Todas las clases</div>
-                      <div className="lms-section-subtitle">Semestre actual</div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button style={{ padding: '6px 10px', borderRadius: 8, background: '#ffffff', border: '1px solid #e2e8f0', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontFamily: 'Sora, sans-serif', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
-                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                        </svg>
-                        Filtrar
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="lms-grid">
-                    {classes.map((classItem, index) => {
-                      const palette = getPaletteForClass(classItem.id)
-                      return (
-                        <div
-                          key={classItem.id}
-                          className="lms-card"
-                          onClick={() => goToClass(classItem.id)}
-                          style={{ animation: `cardIn 0.3s ease-out ${index * 0.06}s backwards` }}
-                        >
-                          {/* Card header */}
-                          <div
-                            className="lms-card-header"
-                            style={{ background: `linear-gradient(135deg, ${palette.from}, ${palette.to})` }}
-                          >
-                            <div className="lms-card-pattern"></div>
-
-                            <div className="lms-card-badge">Activa</div>
-
-                            {/* Decorative accent circle */}
-                            <div style={{ position: 'absolute', bottom: -20, right: -20, width: 80, height: 80, borderRadius: '50%', background: palette.accent, opacity: 0.15 }}></div>
-                            <div style={{ position: 'absolute', top: -10, left: -10, width: 50, height: 50, borderRadius: '50%', background: '#fff', opacity: 0.05 }}></div>
-
-                            <div className="lms-card-title">{classItem.name}</div>
-                            <div className="lms-card-desc">{classItem.description || 'Sin descripción'}</div>
-
-                            <div className="lms-card-accent-bar" style={{ background: `linear-gradient(90deg, ${palette.accent}, transparent)` }}></div>
-                          </div>
-
-                          {/* Card body */}
-                          <div className="lms-card-body">
-                            <div className="lms-teacher-row">
-                              <div
-                                className="lms-teacher-avatar"
-                                style={{ background: `linear-gradient(135deg, ${palette.from}, ${palette.to})` }}
-                              >
-                                {getTeacherInitials(classItem)}
-                              </div>
-                              <div>
-                                <div className="lms-teacher-info-name">{getTeacherName(classItem)}</div>
-                                <div className="lms-teacher-info-date">
-                                  <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                  </svg>
-                                  {formatDate(classItem.created_at)}
-                                </div>
-                              </div>
-                            </div>
-
-                            {classItem.code && (
-                              <div style={{ marginBottom: 12 }}>
-                                <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 6 }}>
-                                  Código de clase
-                                </div>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 10, background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                                  <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '0.82rem', fontWeight: 600, color: '#0f172a', letterSpacing: '0.16em' }}>
-                                    {classItem.code}
-                                  </span>
-                                  <button
-                                    className="lms-card-action"
-                                    style={{ width: 26, height: 26 }}
-                                    onClick={(e) => {
-                                      e.stopPropagation()
-                                      navigator.clipboard.writeText(classItem.code ?? '')
-                                    }}
-                                    title="Copiar código"
-                                  >
-                                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 10h6a2 2 0 002-2v-8a2 2 0 00-2-2h-6a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Progress bar — solo para estudiantes */}
-                            {classItem.my_role === 'student' && (
-                            <div style={{ marginBottom: 12 }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                                <span style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.07em' }}>Progreso del curso</span>
-                                <span style={{ fontSize: '0.65rem', color: palette.accent, fontWeight: 700 }}>
-                                  {classItem.progress ?? 0}%
-                                </span>
-                              </div>
-                              <div style={{ height: 3, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-                                <div style={{
-                                  height: '100%',
-                                  width: `${classItem.progress ?? 0}%`,
-                                  background: palette.accent,
-                                  borderRadius: 99,
-                                  transition: 'width 0.6s ease'
-                                }}></div>
-                              </div>
-                            </div>
-                            )}
-
-                            <div className="lms-card-footer">
-                              <div style={{ display: 'flex', gap: 6 }}>
-                                {/* Members */}
-                                <button
-                                  className="lms-card-action"
-                                  onClick={(e) => e.stopPropagation()}
-                                  title="Miembros"
-                                >
-                                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                  </svg>
-                                </button>
-                                {/* Delete */}
-                                <button
-                                  className="lms-card-action danger"
-                                  onClick={(e) => { e.stopPropagation(); deleteClass(classItem.id, classItem.name) }}
-                                  title="Eliminar"
-                                >
-                                  <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                  </svg>
-                                </button>
-                              </div>
-
-                              <button
-                                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 7, background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', fontFamily: 'Sora, sans-serif', transition: 'all 0.15s' }}
-                                onClick={(e) => { e.stopPropagation(); goToClass(classItem.id) }}
-                              >
-                                Abrir
-                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-
-                    {/* Add card */}
-                    <button className="lms-add-card" onClick={() => setShowCreateModal(true)}>
-                      <div className="lms-add-icon">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                      </div>
-                      <div className="lms-add-label">Crear nueva clase</div>
-                    </button>
-                  </div>
-                </>
+                <DashboardClassGrid
+                  classes={classes}
+                  formatDate={formatDate}
+                  getPaletteForClass={getPaletteForClass}
+                  getTeacherInitials={getTeacherInitials}
+                  getTeacherName={getTeacherName}
+                  onCreateClass={() => setShowCreateModal(true)}
+                  onDeleteClass={deleteClass}
+                  onOpenClass={goToClass}
+                />
               )}
             </div>
           </main>
@@ -1234,147 +996,29 @@ export default function ClassroomDashboard() {
 
         {/* ── Create Class Modal ── */}
         {showCreateModal && (
-          <div className="lms-overlay" onClick={() => setShowCreateModal(false)}>
-            <div className="lms-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="lms-modal-header">
-                <div className="lms-modal-title-row">
-                  <div className="lms-modal-icon" style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                    <svg width="18" height="18" fill="none" stroke="#6366f1" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="lms-modal-title">Crear clase</div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>Como instructor</div>
-                  </div>
-                </div>
-                <button className="lms-modal-close" onClick={() => setShowCreateModal(false)}>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="lms-modal-body">
-                <div className="space-y">
-                  <div>
-                    <label className="lms-label">Nombre de la clase *</label>
-                    <input
-                      className="lms-input"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Ej: Matemáticas Avanzadas 2025"
-                      disabled={loading}
-                      autoFocus
-                    />
-                  </div>
-                  <div>
-                    <label className="lms-label">Descripción</label>
-                    <textarea
-                      className="lms-input lms-textarea"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Describe de qué trata tu clase..."
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="lms-modal-footer">
-                <button className="lms-btn-ghost" onClick={() => setShowCreateModal(false)} disabled={loading}>Cancelar</button>
-                <button className="lms-btn-submit amber" onClick={createClass} disabled={loading || !name.trim()}>
-                  {loading ? (
-                    <>
-                      <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }}></div>
-                      Creando...
-                    </>
-                  ) : (
-                    <>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Crear clase
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+          <CreateClassModal
+            description={description}
+            loading={loading}
+            name={name}
+            onClose={() => setShowCreateModal(false)}
+            onCreate={createClass}
+            onDescriptionChange={setDescription}
+            onNameChange={setName}
+          />
         )}
 
         {/* ── Join Class Modal ── */}
         {showJoinModal && (
-          <div className="lms-overlay" onClick={() => { setShowJoinModal(false); setJoinCode('') }}>
-            <div className="lms-modal" onClick={(e) => e.stopPropagation()}>
-              <div className="lms-modal-header">
-                <div className="lms-modal-title-row">
-                  <div className="lms-modal-icon" style={{ background: 'rgba(6,182,212,0.08)', border: '1px solid rgba(6,182,212,0.15)' }}>
-                    <svg width="18" height="18" fill="none" stroke="#06b6d4" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <div className="lms-modal-title">Unirse a una clase</div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>Con código de invitación</div>
-                  </div>
-                </div>
-                <button className="lms-modal-close" onClick={() => { setShowJoinModal(false); setJoinCode('') }}>
-                  <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="lms-modal-body">
-                <div className="space-y">
-                  <p style={{ fontSize: '0.8125rem', color: '#64748b', lineHeight: 1.6 }}>
-                    Solicita el código de clase a tu instructor e ingrésalo a continuación.
-                  </p>
-                  <div>
-                    <label className="lms-label">Código de clase *</label>
-                    <input
-                      className="lms-input lms-code-input blue"
-                      type="text"
-                      value={joinCode}
-                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                      onKeyDown={(e) => e.key === 'Enter' && joinClass()}
-                      placeholder="ABC123"
-                      maxLength={10}
-                      disabled={joinLoading}
-                      autoFocus
-                    />
-                  </div>
-                  <div className="lms-info-box" style={{ background: 'rgba(6,182,212,0.05)', border: '1px solid rgba(6,182,212,0.12)', color: '#0891b2' }}>
-                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ flexShrink: 0, marginTop: 1 }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span style={{ fontSize: '0.75rem', lineHeight: 1.5 }}>El código distingue mayúsculas y minúsculas. Ingrésalo exactamente como te lo compartió tu instructor.</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lms-modal-footer">
-                <button className="lms-btn-ghost" onClick={() => { setShowJoinModal(false); setJoinCode('') }} disabled={joinLoading}>Cancelar</button>
-                <button className="lms-btn-submit blue" onClick={joinClass} disabled={joinLoading || !joinCode.trim()}>
-                  {joinLoading ? (
-                    <>
-                      <div style={{ width: 14, height: 14, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }}></div>
-                      Uniéndose...
-                    </>
-                  ) : (
-                    <>
-                      <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                      </svg>
-                      Unirse
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
+          <JoinClassModal
+            joinCode={joinCode}
+            joinLoading={joinLoading}
+            onClose={() => {
+              setShowJoinModal(false)
+              setJoinCode('')
+            }}
+            onJoin={joinClass}
+            onJoinCodeChange={setJoinCode}
+          />
         )}
       </div>
     </>

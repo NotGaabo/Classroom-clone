@@ -1,65 +1,22 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
-
-interface ClassItem {
-  id: string
-  name: string
-  description: string | null
-  created_at: string
-  class_members?: Array<{
-    role: string
-    profiles?: {
-      full_name?: string
-      email?: string
-    }
-  }>
-}
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useClassList } from '@/features/classes/hooks/useClassList'
 
 export function useClassroom() {
   const router = useRouter()
-
-  const [classes, setClasses] = useState<ClassItem[]>([])
-  const [fetchingClasses, setFetchingClasses] = useState(true)
+  const {
+    classes,
+    deleteClass,
+    fetchClasses,
+    fetchingClasses,
+    formatDate,
+    getTeacherInitials,
+    getTeacherName,
+  } = useClassList()
 
   useEffect(() => {
     fetchClasses()
-  }, [])
-
-  const fetchClasses = async () => {
-    setFetchingClasses(true)
-    try {
-      const res = await fetch('/api/classes')
-      if (!res.ok) throw new Error('Error al cargar las clases')
-      const data = await res.json()
-      setClasses(data)
-    } catch (err) {
-      console.error(err)
-      alert('No se pudieron cargar las clases. Recarga la página.')
-    } finally {
-      setFetchingClasses(false)
-    }
-  }
-
-  const deleteClass = async (classId: string, className: string) => {
-    const ok = window.confirm(`¿Eliminar "${className}"? Esta acción no se puede deshacer.`)
-    if (!ok) return
-
-    try {
-      const res = await fetch(`/api/classes/${classId}`, { method: 'DELETE' })
-      const data = await res.json().catch(() => ({}))
-
-      if (!res.ok) {
-        alert(data.error || 'Error al eliminar la clase')
-        return
-      }
-
-      setClasses(prev => prev.filter(c => c.id !== classId))
-      alert('Clase eliminada')
-    } catch (err) {
-      console.error(err)
-      alert('Error al eliminar la clase')
-    }
-  }
+  }, [fetchClasses])
 
   const colors = [
     'from-slate-600 to-slate-700',
@@ -79,27 +36,7 @@ export function useClassroom() {
     return colors[index % colors.length]
   }
 
-  const getTeacherInitials = (classItem: ClassItem) => {
-    const teacher = classItem.class_members?.find(m => m.role === 'teacher')
-    const full = teacher?.profiles?.full_name
-    if (full) {
-      const parts = full.trim().split(/\s+/)
-      return parts.map(p => p[0]).join('').slice(0, 2).toUpperCase()
-    }
-    return '👤'
-  }
-
-  const getTeacherName = (classItem: ClassItem) => {
-    const teacher = classItem.class_members?.find(m => m.role === 'teacher')
-    return teacher?.profiles?.full_name || teacher?.profiles?.email || 'Profesor'
-  }
-
-  const formatDate = (dateString: string) => {
-    const d = new Date(dateString)
-    return d.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })
-  }
-
-    return {
+  return {
     classes,
     router,
     fetchingClasses,
@@ -108,6 +45,6 @@ export function useClassroom() {
     getTeacherName,
     formatDate,
     deleteClass,
-    fetchClasses
+    fetchClasses,
+  }
 }
-} 

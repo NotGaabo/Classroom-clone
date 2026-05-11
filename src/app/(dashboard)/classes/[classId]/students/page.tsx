@@ -35,8 +35,8 @@ export default function StudentsPage() {
       try {
         const res = await fetch(`/api/classes/${classId}`)
         if (!res.ok) throw new Error('No se pudo cargar la clase')
-        const data = await res.json()
-        setClassInfo(data)
+        const payload = await res.json()
+        setClassInfo(payload.data)
         setError(null)
       } catch (fetchError) {
         console.error(fetchError)

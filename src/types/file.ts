@@ -3,10 +3,22 @@
 export type FileType = 
   | 'image' 
   | 'pdf' 
+  | 'video'
   | 'word' 
   | 'text' 
   | 'sql'
   | 'unknown'
+
+export type FilePreviewType =
+  | 'code'
+  | 'image'
+  | 'markdown'
+  | 'pdf'
+  | 'sql'
+  | 'text'
+  | 'unknown'
+  | 'video'
+  | 'word'
 
 export interface FileMetadata {
   name: string
@@ -14,6 +26,7 @@ export interface FileMetadata {
   mimeType: string
   extension: string
   url: string
+  previewType?: FilePreviewType
   size?: number | null
 }
 
@@ -33,15 +46,22 @@ export interface FileViewerState {
 export const SUPPORTED_FORMATS = {
   image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'],
   pdf: ['pdf'],
-  word: ['doc', 'docx'],
-  text: ['txt', 'text'],
+  video: ['mp4', 'mov', 'webm', 'avi', 'm4v'],
+  word: ['doc', 'docx', 'ppt', 'pptx'],
+  text: ['txt', 'text', 'md', 'csv', 'json'],
   sql: ['sql'],
 } as const
 
 export const MIME_TYPES = {
   image: ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'],
   pdf: ['application/pdf'],
-  word: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-  text: ['text/plain'],
+  video: ['video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo'],
+  word: [
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ],
+  text: ['text/plain', 'text/markdown', 'application/json', 'text/csv'],
   sql: ['application/sql', 'text/sql'],
 } as const

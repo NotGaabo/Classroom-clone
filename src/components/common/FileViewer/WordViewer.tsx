@@ -13,6 +13,9 @@ interface WordViewerProps {
 export default function WordViewer({ file, onError }: WordViewerProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
+  const isPresentation = ['ppt', 'pptx'].includes(file.extension.toLowerCase())
+  const documentLabel = isPresentation ? 'presentación de PowerPoint' : 'documento de Office'
+  const viewerLabel = isPresentation ? 'Presentación de PowerPoint' : 'Documento de Office'
 
   const handleError = (err: Error) => {
     setError(err)
@@ -26,7 +29,7 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
           <svg className="w-12 h-12 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <p className="text-gray-600 text-sm font-medium mb-2">No se pudo cargar el documento</p>
+          <p className="text-gray-600 text-sm font-medium mb-2">No se pudo cargar el archivo</p>
           <p className="text-gray-400 text-xs mb-4">{error.message}</p>
           
           <div className="space-y-2">
@@ -60,7 +63,7 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
         <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
           <div className="flex flex-col items-center gap-2">
             <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-            <p className="text-sm text-gray-600">Cargando documento de Word...</p>
+            <p className="text-sm text-gray-600">Cargando {documentLabel}...</p>
           </div>
         </div>
       )}
@@ -73,7 +76,7 @@ export default function WordViewer({ file, onError }: WordViewerProps) {
           </svg>
           <div className="flex-1">
             <p className="text-sm font-medium text-gray-900 truncate">{file.name}</p>
-            <p className="text-xs text-gray-500">Documento de Word (visualizador en línea)</p>
+            <p className="text-xs text-gray-500">{viewerLabel} (visualizador en línea)</p>
           </div>
         </div>
         

@@ -10,6 +10,7 @@ import ImageViewer from './ImageViewer'
 import PDFViewer from './PDFViewer'
 import WordViewer from './WordViewer'
 import TextViewer from './TextViewer'
+import VideoViewer from './VideoViewer'
 
 interface InternalFileViewerProps extends FileViewerProps {
   file: FileMetadata | string
@@ -43,7 +44,7 @@ export default function FileViewer({
       if (!isSupportedFileType(metadata.type)) {
         throw new Error(
           `Tipo de archivo no soportado: ${metadata.extension}. ` +
-          `Tipos soportados: imágenes (jpg, png), PDF, Word (doc, docx), TXT, SQL`
+          `Tipos soportados: imágenes, PDF, Office (doc/docx/ppt/pptx), TXT, SQL y video`
         )
       }
 
@@ -118,6 +119,13 @@ export default function FileViewer({
       return (
         <div className={`rounded-lg overflow-hidden ${containerClass}`} style={containerStyle}>
           <WordViewer {...viewerProps} />
+        </div>
+      )
+
+    case 'video':
+      return (
+        <div className={`rounded-lg overflow-hidden ${containerClass}`} style={containerStyle}>
+          <VideoViewer {...viewerProps} />
         </div>
       )
 

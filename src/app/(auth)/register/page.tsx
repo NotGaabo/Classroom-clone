@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 type Step = 'initial' | 'details';
-type AccountRole = 'teacher' | 'student';
 
 export default function SignUpPage() {
   const [step, setStep] = useState<Step>('initial');
@@ -13,7 +12,6 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [accountRole, setAccountRole] = useState<AccountRole>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -21,7 +19,15 @@ export default function SignUpPage() {
   const supabase = createClient();
 
   const getErrorMessage = (error: unknown, fallback: string) => {
-    return error instanceof Error ? error.message : fallback
+    if (error instanceof Error) {
+      if (error.message.includes('Database error saving new user')) {
+        return 'The Supabase auth database triggers are failing for new users. Apply the latest database migrations, especially the auth signup resilience migration, and try again.'
+      }
+
+      return error.message
+    }
+
+    return fallback
   }
 
   const testimonials = [
@@ -68,17 +74,25 @@ export default function SignUpPage() {
         email,
         password,
         options: {
-          emailRedirectTo: `${location.origin}/dashboard`,
-          data: { full_name: fullName, role: accountRole },
+          emailRedirectTo: `${location.origin}/auth/callback?next=/dashboard`,
+          data: { full_name: fullName },
         },
       });
       if (signUpError) throw signUpError;
+
+      if (data.user?.identities && data.user.identities.length === 0) {
+        setError('This email is already registered. Please log in instead.');
+        return;
+      }
+
+      if (data.session) {
+        router.replace('/dashboard');
+        router.refresh();
+        return;
+      }
+
       if (data.user) {
-        if (data.user.identities && data.user.identities.length === 0) {
-          setError('This email is already registered. Please log in instead.');
-          return;
-        }
-        router.push('/dashboard');
+        setError('Account created. Check your email to confirm your account before signing in.');
       }
     } catch (err: unknown) {
       setError(getErrorMessage(err, 'An error occurred during sign up'));
@@ -93,7 +107,7 @@ export default function SignUpPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${location.origin}/dashboard` },
+        options: { redirectTo: `${location.origin}/auth/callback?next=/dashboard` },
       });
       if (error) throw error;
     } catch (err: unknown) {
@@ -108,7 +122,7 @@ export default function SignUpPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'facebook',
-        options: { redirectTo: `${location.origin}/dashboard` },
+        options: { redirectTo: `${location.origin}/auth/callback?next=/dashboard` },
       });
       if (error) throw error;
     } catch (err: unknown) {
@@ -123,7 +137,7 @@ export default function SignUpPage() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${location.origin}/dashboard` },
+        options: { redirectTo: `${location.origin}/auth/callback?next=/dashboard` },
       });
       if (error) throw error;
     } catch (err: unknown) {
@@ -277,37 +291,15 @@ export default function SignUpPage() {
                 {error && <ErrorBox message={error} />}
 
                 <form onSubmit={handleFinalSignup} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <div>
-                    <label style={labelStyle}>I will use this account as</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-                      {[
-                        { value: 'student', label: 'Student', description: 'Join classes and submit work' },
-                        { value: 'teacher', label: 'Teacher', description: 'Create classes and publish assignments' },
-                      ].map((option) => {
-                        const isSelected = accountRole === option.value
-
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setAccountRole(option.value as AccountRole)}
-                            disabled={isLoading}
-                            style={{
-                              border: isSelected ? '1px solid #2563eb' : '1px solid #d1d5db',
-                              backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-                              borderRadius: '0.75rem',
-                              padding: '0.9rem',
-                              textAlign: 'left',
-                              cursor: isLoading ? 'not-allowed' : 'pointer',
-                              transition: 'border-color 0.15s, background-color 0.15s, box-shadow 0.15s',
-                              boxShadow: isSelected ? '0 0 0 3px rgba(37,99,235,0.12)' : 'none',
-                            }}
-                          >
-                            <div style={{ color: '#111827', fontWeight: 600, marginBottom: '0.25rem' }}>{option.label}</div>
-                            <div style={{ color: '#6b7280', fontSize: '0.875rem', lineHeight: 1.35 }}>{option.description}</div>
-                          </button>
-                        )
-                      })}
+                  <div style={{
+                    border: '1px solid #dbeafe',
+                    backgroundColor: '#eff6ff',
+                    borderRadius: '0.75rem',
+                    padding: '0.9rem 1rem',
+                  }}>
+                    <div style={{ color: '#1d4ed8', fontWeight: 600, marginBottom: '0.25rem' }}>Student account by default</div>
+                    <div style={{ color: '#475569', fontSize: '0.875rem', lineHeight: 1.4 }}>
+                      All public signups start as student accounts. Teacher and admin access are assigned securely by an administrator.
                     </div>
                   </div>
 

@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { NextRequest } from 'next/server'
+import { apiSuccess } from '@/server/api/response'
+import { toApiErrorResponse } from '@/server/api/errors'
+import { deleteManagedClass, getClassDetail } from '@/server/services/classes.service'
 
 export async function GET(
   _request: NextRequest,
@@ -7,54 +9,11 @@ export async function GET(
 ) {
   try {
     const { id: classId } = await params
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
-    }
-
-    const { data: classData, error: classError } = await supabase
-      .from('classes')
-      .select(`
-        id,
-        name,
-        description,
-        code,
-        created_at,
-        class_members (
-          role,
-          user_id,
-          profiles (
-            full_name,
-            email
-          )
-        )
-      `)
-      .eq('id', classId)
-      .single()
-
-    if (classError || !classData) {
-      return NextResponse.json(
-        { error: 'Clase no encontrada' },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(classData)
+    const classData = await getClassDetail(classId)
+    return apiSuccess(classData)
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    return toApiErrorResponse(error, 'No se pudo cargar la clase')
   }
 }
 
@@ -64,60 +23,10 @@ export async function DELETE(
 ) {
   try {
     const { id: classId } = await params
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { error: 'No autenticado' },
-        { status: 401 }
-      )
-    }
-
-    const { data: membership, error: membershipError } = await supabase
-      .from('class_members')
-      .select('role')
-      .eq('class_id', classId)
-      .eq('user_id', user.id)
-      .single()
-
-    if (membershipError || !membership) {
-      return NextResponse.json(
-        { error: 'No tienes permiso para eliminar esta clase' },
-        { status: 403 }
-      )
-    }
-
-    if (membership.role !== 'teacher') {
-      return NextResponse.json(
-        { error: 'Solo los profesores pueden eliminar clases' },
-        { status: 403 }
-      )
-    }
-
-    const { error: deleteError } = await supabase
-      .from('classes')
-      .delete()
-      .eq('id', classId)
-
-    if (deleteError) {
-      console.error('Error deleting class:', deleteError)
-      return NextResponse.json(
-        { error: 'No se pudo eliminar la clase' },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({ success: true })
+    await deleteManagedClass(classId)
+    return apiSuccess({ deleted: true, id: classId })
   } catch (error) {
     console.error('Server error:', error)
-    return NextResponse.json(
-      { error: 'Error interno del servidor' },
-      { status: 500 }
-    )
+    return toApiErrorResponse(error, 'No se pudo eliminar la clase')
   }
 }
