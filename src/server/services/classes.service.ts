@@ -23,7 +23,7 @@ export async function createManagedClass(input: { description?: string | null; n
   const auth = await requireAuth()
 
   if (!auth.capabilities.canCreateClass) {
-    const error = new Error('Only teachers or admins can create classes')
+    const error = new Error('Authenticated users can create classes')
     error.name = 'FORBIDDEN'
     throw error
   }
@@ -64,7 +64,7 @@ export async function joinManagedClass(code: string) {
   const auth = await requireAuth()
 
   if (!auth.capabilities.canJoinClass) {
-    const error = new Error('Current role cannot join classes')
+    const error = new Error('Authenticated users can join classes')
     error.name = 'FORBIDDEN'
     throw error
   }

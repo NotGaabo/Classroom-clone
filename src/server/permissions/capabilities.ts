@@ -21,11 +21,17 @@ const ALL_FALSE_CAPABILITIES: CapabilitySet = {
 interface CapabilityContext {
   enrollmentState?: EnrollmentState | null
   isClassOwner?: boolean
+  isClassScoped?: boolean
   role: AppRole
 }
 
 export function buildCapabilities(context: CapabilityContext): CapabilitySet {
-  const { role, isClassOwner = false, enrollmentState = 'active' } = context
+  const {
+    role,
+    isClassOwner = false,
+    enrollmentState = 'active',
+    isClassScoped = false,
+  } = context
   const isActiveMember = enrollmentState === 'active'
 
   if (role === 'admin') {
@@ -48,20 +54,26 @@ export function buildCapabilities(context: CapabilityContext): CapabilitySet {
     }
   }
 
+  if (!isClassScoped) {
+    return {
+      ...ALL_FALSE_CAPABILITIES,
+      canCreateClass: true,
+      canJoinClass: true,
+    }
+  }
+
   if (role === 'teacher') {
     return {
       ...ALL_FALSE_CAPABILITIES,
-      canArchiveClass: isClassOwner,
+      canArchiveClass: isActiveMember && isClassOwner,
       canComment: isActiveMember,
-      canCreateClass: true,
-      canDeleteAssignment: isClassOwner,
-      canDeleteClass: isClassOwner,
-      canEditAssignment: isClassOwner,
-      canEditClass: isClassOwner,
-      canGrade: isClassOwner,
-      canJoinClass: false,
-      canManagePeople: isClassOwner,
-      canPublishAssignment: isClassOwner,
+      canDeleteAssignment: isActiveMember,
+      canDeleteClass: isActiveMember && isClassOwner,
+      canEditAssignment: isActiveMember,
+      canEditClass: isActiveMember,
+      canGrade: isActiveMember,
+      canManagePeople: isActiveMember,
+      canPublishAssignment: isActiveMember,
       canViewGrades: true,
     }
   }

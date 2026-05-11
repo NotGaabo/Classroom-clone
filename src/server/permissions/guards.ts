@@ -40,8 +40,9 @@ export async function requireClassMembership(
     membership,
     role: context.profile.role,
     capabilities: buildCapabilities({
-      role: context.profile.role,
+      role: context.profile.role === 'admin' ? 'admin' : membership.role,
       isClassOwner: isOwner,
+      isClassScoped: true,
       enrollmentState: membership.enrollment_state,
     }),
   }
