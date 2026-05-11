@@ -12,6 +12,8 @@
 # testing
 /coverage
 
+src/lib/supabase/*
+
 # next.js
 /.next/
 /out/

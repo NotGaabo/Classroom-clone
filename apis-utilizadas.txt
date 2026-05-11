@@ -1,0 +1,52 @@
+#Autenticacion utilizada
+Supabase Auth
+OAuth Google
+OAuth Facebook
+OAuth Apple
+Ruta de callback /auth/callback
+
+#API GET utilizada
+GET /auth/callback
+GET /api/classes
+GET /api/classes/[id]
+GET /api/assignments
+GET /api/assignments/[assignmentId]
+GET /api/assignments/[assignmentId]/comments
+
+#API POST utilizada
+POST /api/classes
+POST /api/classes/join
+POST /api/assignments
+POST /api/assignments/[assignmentId]/comments
+POST /api/assignments/[assignmentId]/submission
+POST /api/assignments/[assignmentId]/grade
+
+#API PUT utilizada
+Ninguna encontrada en el proyecto
+
+#API PATCH utilizada
+Ninguna encontrada en el proyecto
+
+#API DELETE utilizada
+DELETE /api/classes/[id]
+
+#Base de datos utilizada
+Supabase Database
+Tablas: classes, assignments, class_members, profiles, assignment_comments, assignment_submissions, assignment_submissions_grades, assignment_submission_files, assignment_files, notifications, activity_events, audit_logs, files
+
+#Funciones RPC utilizadas
+create_classroom
+join_class_by_code
+
+#Storage utilizada
+Supabase Storage
+Buckets: assignment-submissions, assignment-files
+Operaciones: upload, remove, createSignedUrl
+
+#Realtime utilizada
+Supabase Realtime
+Eventos postgres_changes sobre assignments y assignment_comments
+
+#Servicios externos utilizados
+Microsoft Office Online Viewer (view.officeapps.live.com)
+Google Fonts API (next/font/google y fonts.googleapis.com)

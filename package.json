@@ -4,25 +4,36 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "qa:full": "node scripts/qa/run-full-suite.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.8.0",
+    "@tanstack/react-query": "^5.100.9",
     "next": "16.1.6",
-    "next-auth": "^4.24.13",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-aria-components": "^1.15.1",
+    "react-dom": "19.2.3",
+    "tailwind": "^4.0.0",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@playwright/test": "^1.59.1",
+    "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.24",
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4",
+    "lighthouse": "^13.3.0",
+    "newman": "^6.2.2",
+    "postcss": "^8.5.6",
+    "supabase": "^2.98.2",
     "typescript": "^5"
   }
 }
